@@ -12,16 +12,263 @@ datasource db {
   provider = "postgresql"
 }
 
+// ENUMS
+
+enum Role {
+  CUSTOMER
+  ORGANIZER
+}
+
+enum TransactionStatus {
+  WAITING_PAYMENT
+  WAITING_CONFIRMATION
+  DONE
+  REJECTED
+  EXPIRED
+  CANCELED
+}
+
+enum EventCategory {
+  MUSIC
+  WORKSHOP
+  BUSINESS
+  EDUCATION
+  ARTS
+  GAMES
+}
+
+// FEATURE 2: AUTH, REFERRAL, PRIZES
 
 model User {
-  id                String          @id @default(uuid())
-  email             String          @db.Text @unique
-  name              String          @db.VarChar(70)
-  phone             String          @db.VarChar(20)
-  profilePictureUrl String?
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
-  deletedAt         DateTime?
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email             String    @unique @db.VarChar(255)
+  username          String    @unique @db.VarChar(50)
+  password          String    @db.VarChar(255)
+  name              String    @db.VarChar(100)
+  role              Role      @default(CUSTOMER)
+  phoneNumber       String?   @db.VarChar(20)
+  profilePictureUrl String?   @db.VarChar(500)
+  referralCode      String    @unique @db.VarChar(12)
+  referredById      String?   @db.Uuid
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
+  deletedAt         DateTime? @db.Timestamptz(6)
 
+  // --- relasi ---
+  referredBy          User?                @relation("UserReferral", fields: [referredById], references: [id], onDelete: SetNull)
+  referrals           User[]               @relation("UserReferral")
+  organizerProfile    EventOrganizer?
+  passwordResetTokens PasswordResetToken[]
+  points              Point[]
+  coupons             Coupon[]
+  transactions        Transaction[]
+  reviews             Review[]
+
+  @@index([role])
+  @@index([referredById])
   @@map("users")
+}
+
+
+model EventOrganizer {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String   @unique @db.Uuid
+  organizerBio  String?
+  averageRating Decimal  @default(0) @db.Decimal(3, 2)
+  totalReviews  Int      @default(0)
+  createdAt     DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+
+  // --- relasi ---
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  events Event[]
+
+  @@map("event_organizers")
+}
+
+
+model PasswordResetToken {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String    @db.Uuid
+  tokenHash String    @unique @db.VarChar(255)
+  expiresAt DateTime  @db.Timestamptz(6)
+  usedAt    DateTime? @db.Timestamptz(6)
+  createdAt DateTime  @default(now()) @db.Timestamptz(6)
+
+  // --- relasi ---
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("password_reset_tokens")
+}
+
+model Point {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @db.Uuid
+  amount    Int
+  expiresAt DateTime @db.Timestamptz(6)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+
+  // --- relasi ---
+  user   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  usages PointUsage[]
+
+  @@index([userId, expiresAt])
+  @@map("points")
+}
+
+model Coupon {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId         String    @db.Uuid
+  code           String    @unique @db.VarChar(30)
+  discountAmount Int
+  expiresAt      DateTime  @db.Timestamptz(6)
+  usedAt         DateTime? @db.Timestamptz(6)
+  createdAt      DateTime  @default(now()) @db.Timestamptz(6)
+
+  // --- relasi ---
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@index([userId, expiresAt])
+  @@map("coupons")
+}
+
+// FEATURE 1: EVENT, TRANSACTION, REVIEW
+
+model Event {
+  id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizerId    String        @db.Uuid
+  name           String        @db.VarChar(200)
+  description    String
+  category       EventCategory
+  city           String        @db.VarChar(100)
+  venue          String        @db.VarChar(200)
+  imageUrl       String?       @db.VarChar(500)
+  price          Int           @default(0)
+  startDate      DateTime      @db.Timestamptz(6)
+  endDate        DateTime      @db.Timestamptz(6)
+  totalSeats     Int
+  availableSeats Int
+  createdAt      DateTime      @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime      @default(now()) @updatedAt @db.Timestamptz(6)
+
+  // --- relasi ---
+  organizer    EventOrganizer @relation(fields: [organizerId], references: [id], onDelete: Restrict)
+  ticketTypes  TicketType[]
+  vouchers     Voucher[]
+  transactions Transaction[]
+  reviews      Review[]
+
+  @@index([organizerId])
+  @@index([category])
+  @@index([city])
+  @@index([startDate])
+  @@map("events")
+}
+
+model TicketType {
+  id        String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  eventId   String @db.Uuid
+  name      String @db.VarChar(100)
+  price     Int
+  quota     Int
+  available Int
+
+  // --- relasi ---
+  event        Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@unique([eventId, name])
+  @@map("ticket_types")
+}
+
+model Voucher {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  eventId        String   @db.Uuid
+  code           String   @db.VarChar(30)
+  discountAmount Int
+  quota          Int?
+  usedCount      Int      @default(0)
+  startDate      DateTime @db.Timestamptz(6)
+  endDate        DateTime @db.Timestamptz(6)
+  createdAt      DateTime @default(now()) @db.Timestamptz(6)
+
+  // --- relasi ---
+  event        Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@unique([eventId, code])
+  @@map("vouchers")
+}
+
+model Transaction {
+  id                     String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId                 String            @db.Uuid
+  eventId                String            @db.Uuid
+  ticketTypeId           String?           @db.Uuid
+  quantity               Int
+  unitPrice              Int
+  subtotal               Int
+  voucherId              String?           @db.Uuid
+  voucherDiscount        Int               @default(0)
+  couponId               String?           @db.Uuid
+  couponDiscount         Int               @default(0)
+  pointsUsed             Int               @default(0)
+  totalPrice             Int
+  status                 TransactionStatus @default(WAITING_PAYMENT)
+  paymentProofUrl        String?           @db.VarChar(500)
+  paymentProofUploadedAt DateTime?         @db.Timestamptz(6)
+  paymentExpiresAt       DateTime?         @db.Timestamptz(6)
+  confirmDeadlineAt      DateTime?         @db.Timestamptz(6)
+  decidedAt              DateTime?         @db.Timestamptz(6)
+  createdAt              DateTime          @default(now()) @db.Timestamptz(6)
+  updatedAt              DateTime          @default(now()) @updatedAt @db.Timestamptz(6)
+
+  // --- relasi ---
+  user        User         @relation(fields: [userId], references: [id], onDelete: Restrict)
+  event       Event        @relation(fields: [eventId], references: [id], onDelete: Restrict)
+  ticketType  TicketType?  @relation(fields: [ticketTypeId], references: [id], onDelete: Restrict)
+  voucher     Voucher?     @relation(fields: [voucherId], references: [id], onDelete: Restrict)
+  coupon      Coupon?      @relation(fields: [couponId], references: [id], onDelete: Restrict)
+  pointUsages PointUsage[]
+
+  @@index([userId])
+  @@index([eventId, status])
+  @@index([status, paymentExpiresAt], map: "idx_tx_cron_expire")
+  @@index([status, confirmDeadlineAt], map: "idx_tx_cron_cancel")
+  @@map("transactions")
+}
+
+model PointUsage {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  transactionId String    @db.Uuid
+  pointId       String    @db.Uuid
+  amount        Int
+  restoredAt    DateTime? @db.Timestamptz(6)
+
+  // --- relasi ---
+  transaction Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  point       Point       @relation(fields: [pointId], references: [id], onDelete: Restrict)
+
+  @@index([transactionId])
+  @@index([pointId])
+  @@map("point_usages")
+}
+
+model Review {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @db.Uuid
+  eventId   String   @db.Uuid
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+
+  // --- relasi ---
+  user  User  @relation(fields: [userId], references: [id], onDelete: Restrict)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId])
+  @@index([eventId])
+  @@map("reviews")
 }
