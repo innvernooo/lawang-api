@@ -5,28 +5,54 @@ import path from 'path';
 import { prisma } from '../../configs/prisma-client.config';
 import { AppError } from '../../errors/app.error';
 import {
-  LoginUserInput,
-  NewUserOutput,
-  PatchUserInput,
-} from '../../validators/auth.validator';
+  LoginCustomerInput,
+  NewCustomerOutput,
+  PatchCustomerInput,
+} from '../../validators/customer.validator';
 import { Bcrypt } from '../../lib/bcrypt.lib';
 import { Jwt } from '../../lib/jwt.lib';
 
 const generateReferralCode = () => randomBytes(6).toString('hex').toUpperCase();
+const generateCouponCode = () =>
+  `REF-${randomBytes(4).toString('hex').toUpperCase()}`;
 
-export class UserService {
-  static async create({ body }: NewUserOutput, file: Express.Multer.File[]) {
-    const existing = await prisma.user.findFirst({
-      where: { OR: [{ email: body.email }, { username: body.username }] },
+const referralPoint = 10000;
+const couponDiscount = 50000;
+const validMonths = 3;
+
+const addMonths = (months: number) => {
+  const date = new Date();
+  date.setMonth(date.getMonth() + months);
+  return date;
+};
+
+export class CustomerService {
+  static async create(
+    { body }: NewCustomerOutput,
+    file: Express.Multer.File[],
+  ) {
+    const existing = await prisma.customer.findFirst({
+      where: {
+        OR: [
+          { email: body.email },
+          { username: body.username },
+          ...(body?.nik ? [{ nik: body?.nik }] : []),
+        ],
+      },
       select: { id: true },
     });
-    if (existing) throw new AppError(409, 'Email or username already used');
+    if (existing)
+      throw new AppError(409, 'Email or username or NIK already used');
 
     const hashPassword = Bcrypt.hashPassword(body?.password, 10);
 
     const referrer = body.referralCode
-      ? await prisma.user.findUnique({
-          where: { referralCode: body.referralCode },
+      ? await prisma.customer.findFirst({
+          where: {
+            referralCode: body.referralCode,
+            role: 'CUSTOMER',
+            deletedAt: null,
+          },
           select: { id: true },
         })
       : null;
@@ -37,20 +63,43 @@ export class UserService {
       ? `/uploads/${file[0].filename}`
       : undefined;
 
-    return prisma.user.create({
-      data: {
-        ...body,
-        password: await hashPassword,
-        profilePictureUrl,
-        referralCode: generateReferralCode(),
-        referredById: referrer?.id,
-      },
-      omit: { password: true },
+    return prisma.$transaction(async (tx) => {
+      const user = await tx.customer.create({
+        data: {
+          ...body,
+          password: await hashPassword,
+          profilePictureUrl,
+          referralCode: generateReferralCode(),
+          referredById: referrer?.id,
+        },
+        omit: { password: true, nik: true },
+      });
+
+      if (referrer) {
+        await tx.point.create({
+          data: {
+            customerId: referrer.id,
+            amount: referralPoint,
+            expiresAt: addMonths(validMonths),
+          },
+        });
+
+        await tx.coupon.create({
+          data: {
+            customerId: user.id,
+            code: generateCouponCode(),
+            discountAmount: couponDiscount,
+            expiresAt: addMonths(validMonths),
+          },
+        });
+      }
+
+      return user;
     });
   }
 
-  static async login({ body }: LoginUserInput) {
-    const user = await prisma.user.findFirst({
+  static async login({ body }: LoginCustomerInput) {
+    const user = await prisma.customer.findFirst({
       where: {
         deletedAt: null,
         OR: [{ email: body?.identifier }, { username: body?.identifier }],
@@ -85,11 +134,11 @@ export class UserService {
     };
   }
   static async patch(
-    { body }: PatchUserInput,
+    { body }: PatchCustomerInput,
     file: Express.Multer.File[],
     userId: string,
   ) {
-    const user = await prisma.user.findFirst({
+    const user = await prisma.customer.findFirst({
       where: { id: userId, deletedAt: null },
       select: { id: true, profilePictureUrl: true },
     });
@@ -97,7 +146,7 @@ export class UserService {
     if (!user) throw new AppError(404, 'User not found');
 
     if (body.username) {
-      const duplicate = await prisma.user.findFirst({
+      const duplicate = await prisma.customer.findFirst({
         where: { username: body.username, id: { not: userId } },
         select: { id: true },
       });
@@ -108,7 +157,7 @@ export class UserService {
       ? `/uploads/${file[0].filename}`
       : undefined;
 
-    const updated = await prisma.user.update({
+    const updated = await prisma.customer.update({
       data: {
         ...body,
         profilePictureUrl,

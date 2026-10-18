@@ -1,23 +1,24 @@
 import { Router } from 'express';
 import { uploadMiddleware } from '../../middlewares/upload.middleware';
-import { UserController } from './auth.controller';
-import { authenticate } from '../../middlewares/auth.middleware';
+import { CustomerController } from './customer.controller';
+import { authenticate, authorize } from '../../middlewares/auth.middleware';
 
-export const userRouter = Router();
+export const customerRouter = Router();
 
-userRouter.post(
+customerRouter.post(
   '/register',
   uploadMiddleware(['jpg', 'jpeg', 'png', 'webp', 'svg'], 'DISK').fields([
     { name: 'profilePicture', maxCount: 1 },
   ]),
-  UserController.create,
+  CustomerController.create,
 );
-userRouter.patch(
+customerRouter.patch(
   '/update/me',
   authenticate,
+  authorize(['CUSTOMER']),
   uploadMiddleware(['jpg', 'jpeg', 'png', 'webp', 'svg'], 'DISK').fields([
     { name: 'profilePicture', maxCount: 1 },
   ]),
-  UserController.patch,
+  CustomerController.patch,
 );
-userRouter.post('/login', UserController.login);
+customerRouter.post('/login', CustomerController.login);

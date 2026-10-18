@@ -1,14 +1,14 @@
 import { NextFunction, Request, Response } from 'express';
 import { validate } from '../../validators/validate';
 import {
-  registerUserSchema,
-  patchUserSchema,
-  loginUserSchema,
-} from '../../validators/auth.validator';
-import { UserService } from './auth.service';
+  registerCustomerSchema,
+  patchCustomerSchema,
+  loginCustomerSchema,
+} from '../../validators/customer.validator';
+import { CustomerService } from './customer.service';
 import fs from 'fs/promises';
 
-export class UserController {
+export class CustomerController {
   static async create(req: Request, res: Response, next: NextFunction) {
     const file: Express.Multer.File[] =
       (
@@ -16,9 +16,9 @@ export class UserController {
       )?.['profilePicture'] ?? [];
 
     try {
-      const { body } = validate(registerUserSchema, { body: req.body });
+      const { body } = validate(registerCustomerSchema, { body: req.body });
 
-      const user = await UserService.create({ body }, file);
+      const user = await CustomerService.create({ body }, file);
 
       res.status(201).json({
         success: true,
@@ -34,14 +34,15 @@ export class UserController {
   }
 
   static async login(req: Request, res: Response) {
-    const { body } = validate(loginUserSchema, { body: req.body });
+    const { body } = validate(loginCustomerSchema, { body: req.body });
 
-    const { token, safeUser } = await UserService.login({ body });
+    const { token, safeUser } = await CustomerService.login({ body });
 
     res.cookie('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'PRODUCTION',
       sameSite: 'strict',
+      maxAge: 2 * 60 * 60 * 1000,
     });
 
     res.status(200).json({
@@ -57,11 +58,15 @@ export class UserController {
       )?.['profilePicture'] ?? [];
 
     try {
-      const { body } = validate(patchUserSchema, {
+      const { body } = validate(patchCustomerSchema, {
         body: req.body,
       });
 
-      const user = await UserService.patch({ body }, file, res?.locals?.payload?.id);
+      const user = await CustomerService.patch(
+        { body },
+        file,
+        res?.locals?.payload?.id,
+      );
 
       res.status(200).json({
         success: true,

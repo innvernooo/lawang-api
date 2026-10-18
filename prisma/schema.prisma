@@ -19,6 +19,11 @@ enum Role {
   ORGANIZER
 }
 
+enum OrganizerType {
+  INDIVIDUAL // perorangan
+  COMPANY // badan usaha (PT, CV, yayasan, dll.)
+}
+
 enum TransactionStatus {
   WAITING_PAYMENT
   WAITING_CONFIRMATION
@@ -39,12 +44,13 @@ enum EventCategory {
 
 // FEATURE 2: AUTH, REFERRAL, PRIZES
 
-model User {
+model Customer {
   id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email             String    @unique @db.VarChar(255)
   username          String    @unique @db.VarChar(50)
   password          String    @db.VarChar(255)
   name              String    @db.VarChar(100)
+  nik               String?   @unique @db.VarChar(16)
   role              Role      @default(CUSTOMER)
   phoneNumber       String?   @db.VarChar(20)
   profilePictureUrl String?   @db.VarChar(500)
@@ -55,71 +61,104 @@ model User {
   deletedAt         DateTime? @db.Timestamptz(6)
 
   // --- relasi ---
-  referredBy          User?                @relation("UserReferral", fields: [referredById], references: [id], onDelete: SetNull)
-  referrals           User[]               @relation("UserReferral")
-  organizerProfile    EventOrganizer?
+  referredBy          Customer?            @relation("CustomerReferral", fields: [referredById], references: [id], onDelete: SetNull)
+  referrals           Customer[]           @relation("CustomerReferral")
   passwordResetTokens PasswordResetToken[]
   points              Point[]
   coupons             Coupon[]
   transactions        Transaction[]
   reviews             Review[]
 
-  @@index([role])
   @@index([referredById])
-  @@map("users")
+  @@map("customers")
 }
 
+model Organizer {
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email             String    @unique @db.VarChar(255)
+  username          String    @unique @db.VarChar(50)
+  password          String    @db.VarChar(255)
+  role              Role      @default(ORGANIZER)
+  profilePictureUrl String?   @db.VarChar(500) // logo organizer
 
-model EventOrganizer {
-  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId        String   @unique @db.Uuid
+  // --- identitas organizer ---
+  organizerName String        @db.VarChar(150) // nama brand yang tampil di event
+  organizerType OrganizerType
+  legalName     String        @db.VarChar(200) // nama sesuai NPWP / akta (perorangan: nama sesuai KTP)
   organizerBio  String?
-  averageRating Decimal  @default(0) @db.Decimal(3, 2)
-  totalReviews  Int      @default(0)
-  createdAt     DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt     DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+  websiteUrl    String?       @db.VarChar(255)
+  instagramUrl  String?       @db.VarChar(255)
+
+  // --- legalitas ---
+  npwp         String  @unique @db.VarChar(16) // 16 digit, tanpa titik/strip
+  npwpImageUrl String?  @db.VarChar(500)
+  nib          String? @unique @db.VarChar(13) // Nomor Induk Berusaha, wajib untuk COMPANY
+
+  // --- penanggung jawab (PIC) ---
+  picName        String @db.VarChar(100)
+  picNik         String @db.VarChar(16) // NIK KTP, 16 digit
+  picKtpImageUrl String? @db.VarChar(500)
+  picPhoneNumber String @db.VarChar(20)
+
+  // --- alamat kantor ---
+  officeAddress String @db.VarChar(500)
+  city          String @db.VarChar(100)
+  province      String @db.VarChar(100)
+  postalCode    String @db.VarChar(5)
+
+  // --- rekening pencairan dana ---
+  bankName          String @db.VarChar(100)
+  bankAccountNumber String @db.VarChar(30)
+  bankAccountHolder String @db.VarChar(150) // harus sama dengan legalName
+
+  createdAt DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
+  deletedAt DateTime? @db.Timestamptz(6)
 
   // --- relasi ---
-  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  events Event[]
+  events              Event[]
+  passwordResetTokens PasswordResetToken[]
 
-  @@map("event_organizers")
+  @@map("organizers")
 }
 
-
+// Dipakai customer maupun organizer: isi salah satu dari customerId / organizerId
 model PasswordResetToken {
-  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId    String    @db.Uuid
-  tokenHash String    @unique @db.VarChar(255)
-  expiresAt DateTime  @db.Timestamptz(6)
-  usedAt    DateTime? @db.Timestamptz(6)
-  createdAt DateTime  @default(now()) @db.Timestamptz(6)
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  customerId  String?   @db.Uuid
+  organizerId String?   @db.Uuid
+  tokenHash   String    @unique @db.VarChar(255)
+  expiresAt   DateTime  @db.Timestamptz(6)
+  usedAt      DateTime? @db.Timestamptz(6)
+  createdAt   DateTime  @default(now()) @db.Timestamptz(6)
 
   // --- relasi ---
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  customer  Customer?  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  organizer Organizer? @relation(fields: [organizerId], references: [id], onDelete: Cascade)
 
-  @@index([userId])
+  @@index([customerId])
+  @@index([organizerId])
   @@map("password_reset_tokens")
 }
 
 model Point {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId    String   @db.Uuid
-  amount    Int
-  expiresAt DateTime @db.Timestamptz(6)
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  customerId String   @db.Uuid
+  amount     Int
+  expiresAt  DateTime @db.Timestamptz(6)
+  createdAt  DateTime @default(now()) @db.Timestamptz(6)
 
   // --- relasi ---
-  user   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  usages PointUsage[]
+  customer Customer     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  usages   PointUsage[]
 
-  @@index([userId, expiresAt])
+  @@index([customerId, expiresAt])
   @@map("points")
 }
 
 model Coupon {
   id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId         String    @db.Uuid
+  customerId     String    @db.Uuid
   code           String    @unique @db.VarChar(30)
   discountAmount Int
   expiresAt      DateTime  @db.Timestamptz(6)
@@ -127,10 +166,10 @@ model Coupon {
   createdAt      DateTime  @default(now()) @db.Timestamptz(6)
 
   // --- relasi ---
-  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  customer     Customer      @relation(fields: [customerId], references: [id], onDelete: Cascade)
   transactions Transaction[]
 
-  @@index([userId, expiresAt])
+  @@index([customerId, expiresAt])
   @@map("coupons")
 }
 
@@ -154,7 +193,7 @@ model Event {
   updatedAt      DateTime      @default(now()) @updatedAt @db.Timestamptz(6)
 
   // --- relasi ---
-  organizer    EventOrganizer @relation(fields: [organizerId], references: [id], onDelete: Restrict)
+  organizer    Organizer     @relation(fields: [organizerId], references: [id], onDelete: Restrict)
   ticketTypes  TicketType[]
   vouchers     Voucher[]
   transactions Transaction[]
@@ -204,7 +243,7 @@ model Voucher {
 
 model Transaction {
   id                     String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId                 String            @db.Uuid
+  customerId             String            @db.Uuid
   eventId                String            @db.Uuid
   ticketTypeId           String?           @db.Uuid
   quantity               Int
@@ -226,14 +265,14 @@ model Transaction {
   updatedAt              DateTime          @default(now()) @updatedAt @db.Timestamptz(6)
 
   // --- relasi ---
-  user        User         @relation(fields: [userId], references: [id], onDelete: Restrict)
+  customer    Customer     @relation(fields: [customerId], references: [id], onDelete: Restrict)
   event       Event        @relation(fields: [eventId], references: [id], onDelete: Restrict)
   ticketType  TicketType?  @relation(fields: [ticketTypeId], references: [id], onDelete: Restrict)
   voucher     Voucher?     @relation(fields: [voucherId], references: [id], onDelete: Restrict)
   coupon      Coupon?      @relation(fields: [couponId], references: [id], onDelete: Restrict)
   pointUsages PointUsage[]
 
-  @@index([userId])
+  @@index([customerId])
   @@index([eventId, status])
   @@index([status, paymentExpiresAt], map: "idx_tx_cron_expire")
   @@index([status, confirmDeadlineAt], map: "idx_tx_cron_cancel")
@@ -257,18 +296,18 @@ model PointUsage {
 }
 
 model Review {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId    String   @db.Uuid
-  eventId   String   @db.Uuid
-  rating    Int
-  comment   String?
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  customerId String   @db.Uuid
+  eventId    String   @db.Uuid
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now()) @db.Timestamptz(6)
 
   // --- relasi ---
-  user  User  @relation(fields: [userId], references: [id], onDelete: Restrict)
-  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  event    Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, eventId])
+  @@unique([customerId, eventId])
   @@index([eventId])
   @@map("reviews")
 }
