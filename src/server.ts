@@ -3,7 +3,7 @@ import express from 'express';
 import { corsOptions } from './configs/cors.config';
 import cors from 'cors';
 import { errorMiddleware } from './middlewares/error.middleware';
-import { userRouter } from './features/user/auth.route';
+import { customerRouter } from './features/customer/customer.route';
 import cookieParser from 'cookie-parser';
 
 const PORT: number = parseInt(process.env.PORT!);
@@ -14,7 +14,7 @@ const app = express();
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
-app.use(`${API_PREFIX}/users`, userRouter);
+app.use(`${API_PREFIX}/customers`, customerRouter);
 
 app.use(errorMiddleware);
 

@@ -22,7 +22,7 @@ const email = z
 
 const password = z
   .string()
-  .min(8, 'Password input is required, minimum 8 characters');
+  .min(1, 'Password input is required');
 
 const identifier = z
   .string()
@@ -35,6 +35,7 @@ const referralCode = z.preprocess(
   z
     .string()
     .trim()
+    .toUpperCase()
     .length(12, 'Referral code must be 12 characters')
     .optional(),
 );
@@ -49,39 +50,42 @@ const phoneNumber = z.preprocess(
     .optional(),
 );
 
-const role = z
-  .enum(['CUSTOMER', 'ORGANIZER'], 'Role must be CUSTOMER or ORGANIZER')
-  .optional();
+const nik = z.preprocess(
+  emptyToUndefined,
+  z
+    .string()
+    .trim()
+    .regex(/^[0-9]{16}$/, 'NIK must be 16 digits')
+    .optional(),
+);
 
-// Profile picture is uploaded as a file via multer (req.file) and stored in
-// users.profilePictureUrl, so size/extension checks live in upload.middleware.
-export const registerUserSchema = z.object({
+export const registerCustomerSchema = z.object({
   body: z.object({
     name,
     username,
     email,
     password,
     phoneNumber,
-    role,
+    nik,
     referralCode,
   }),
 });
 
-export const loginUserSchema = z.object({
+export const loginCustomerSchema = z.object({
   body: z.object({
     identifier,
     password,
   }),
 });
 
-export const patchUserSchema = z.object({
+export const patchCustomerSchema = z.object({
   body: z.object({
     name: z.preprocess(emptyToUndefined, name.optional()),
     username: z.preprocess(emptyToUndefined, username.optional()),
     phoneNumber,
   }),
 });
-export type NewUserInput = z.input<typeof registerUserSchema>;
-export type NewUserOutput = z.output<typeof registerUserSchema>;
-export type PatchUserInput = z.infer<typeof patchUserSchema>;
-export type LoginUserInput = z.input<typeof loginUserSchema>;
+export type NewCustomerInput = z.input<typeof registerCustomerSchema>;
+export type NewCustomerOutput = z.output<typeof registerCustomerSchema>;
+export type PatchCustomerInput = z.infer<typeof patchCustomerSchema>;
+export type LoginCustomerInput = z.input<typeof loginCustomerSchema>;
