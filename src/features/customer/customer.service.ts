@@ -5,12 +5,11 @@ import path from 'path';
 import { prisma } from '../../configs/prisma-client.config';
 import { AppError } from '../../errors/app.error';
 import {
-  LoginCustomerInput,
   NewCustomerOutput,
   PatchCustomerInput,
 } from '../../validators/customer.validator';
 import { Bcrypt } from '../../lib/bcrypt.lib';
-import { Jwt } from '../../lib/jwt.lib';
+import { cloudionaryUpload } from '../../lib/cloudinary.lib';
 
 const generateReferralCode = () => randomBytes(6).toString('hex').toUpperCase();
 const generateCouponCode = () =>
@@ -44,6 +43,13 @@ export class CustomerService {
     if (existing)
       throw new AppError(409, 'Email or username or NIK already used');
 
+    const usedByOrganizer = await prisma.organizer.findFirst({
+      where: { OR: [{ email: body.email }, { username: body.username }] },
+      select: { id: true },
+    });
+    if (usedByOrganizer)
+      throw new AppError(409, 'Email or username already used');
+
     const hashPassword = Bcrypt.hashPassword(body?.password, 10);
 
     const referrer = body.referralCode
@@ -59,20 +65,21 @@ export class CustomerService {
     if (body.referralCode && !referrer)
       throw new AppError(400, 'Referral code not found');
 
-    const profilePictureUrl = file[0]
-      ? `/uploads/${file[0].filename}`
-      : undefined;
+    const cloudinaryUploadUrl = await cloudionaryUpload(
+      file[0]?.buffer,
+      'CustomerPicture',
+    );
 
     return prisma.$transaction(async (tx) => {
       const user = await tx.customer.create({
         data: {
           ...body,
           password: await hashPassword,
-          profilePictureUrl,
+          profilePictureUrl: `${cloudinaryUploadUrl}`,
           referralCode: generateReferralCode(),
           referredById: referrer?.id,
         },
-        omit: { password: true, nik: true },
+        omit: { password: true, nik: true, deletedAt: true },
       });
 
       if (referrer) {
@@ -98,41 +105,6 @@ export class CustomerService {
     });
   }
 
-  static async login({ body }: LoginCustomerInput) {
-    const user = await prisma.customer.findFirst({
-      where: {
-        deletedAt: null,
-        OR: [{ email: body?.identifier }, { username: body?.identifier }],
-      },
-    });
-
-    if (!user) throw new AppError(401, 'Invalid email/username or password');
-
-    const comparredPassword = await Bcrypt.comparredPassword(
-      body?.password,
-      user?.password,
-    );
-
-    if (!comparredPassword)
-      throw new AppError(401, 'Invalid email/username or password');
-
-    const token = await Jwt.generate(
-      {
-        id: user?.id,
-        name: user?.name,
-        email: user?.email,
-        role: user?.role,
-      },
-      process.env.JWT_SECRET_KEY!,
-      { expiresIn: '2h' },
-    );
-
-    const { password, ...safeUser } = user;
-    return {
-      token,
-      safeUser,
-    };
-  }
   static async patch(
     { body }: PatchCustomerInput,
     file: Express.Multer.File[],

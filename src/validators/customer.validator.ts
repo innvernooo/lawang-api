@@ -22,13 +22,8 @@ const email = z
 
 const password = z
   .string()
-  .min(1, 'Password input is required');
-
-const identifier = z
-  .string()
-  .trim()
-  .min(1, 'Email or username is required')
-  .max(255, 'Email or username has maximum 255 characters');
+  .min(1, 'Password input is required')
+  .max(255, 'Maximum input has maximum 255 characters');
 
 const referralCode = z.preprocess(
   emptyToUndefined,
@@ -71,13 +66,6 @@ export const registerCustomerSchema = z.object({
   }),
 });
 
-export const loginCustomerSchema = z.object({
-  body: z.object({
-    identifier,
-    password,
-  }),
-});
-
 export const patchCustomerSchema = z.object({
   body: z.object({
     name: z.preprocess(emptyToUndefined, name.optional()),
@@ -88,4 +76,3 @@ export const patchCustomerSchema = z.object({
 export type NewCustomerInput = z.input<typeof registerCustomerSchema>;
 export type NewCustomerOutput = z.output<typeof registerCustomerSchema>;
 export type PatchCustomerInput = z.infer<typeof patchCustomerSchema>;
-export type LoginCustomerInput = z.input<typeof loginCustomerSchema>;
