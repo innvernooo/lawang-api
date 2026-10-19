@@ -75,8 +75,8 @@ model Customer {
 
 model Organizer {
   id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email             String    @unique @db.VarChar(255)
-  username          String    @unique @db.VarChar(50)
+  email             String    @unique @db.VarChar(150)
+  username          String    @unique @db.VarChar(100)
   password          String    @db.VarChar(255)
   role              Role      @default(ORGANIZER)
   profilePictureUrl String?   @db.VarChar(500) // logo organizer
@@ -85,31 +85,29 @@ model Organizer {
   organizerName String        @db.VarChar(150) // nama brand yang tampil di event
   organizerType OrganizerType
   legalName     String        @db.VarChar(200) // nama sesuai NPWP / akta (perorangan: nama sesuai KTP)
-  organizerBio  String?
+  organizerBio  String?       @db.Text
   websiteUrl    String?       @db.VarChar(255)
   instagramUrl  String?       @db.VarChar(255)
 
   // --- legalitas ---
   npwp         String  @unique @db.VarChar(16) // 16 digit, tanpa titik/strip
-  npwpImageUrl String?  @db.VarChar(500)
   nib          String? @unique @db.VarChar(13) // Nomor Induk Berusaha, wajib untuk COMPANY
 
   // --- penanggung jawab (PIC) ---
   picName        String @db.VarChar(100)
   picNik         String @db.VarChar(16) // NIK KTP, 16 digit
-  picKtpImageUrl String? @db.VarChar(500)
   picPhoneNumber String @db.VarChar(20)
 
   // --- alamat kantor ---
   officeAddress String @db.VarChar(500)
-  city          String @db.VarChar(100)
-  province      String @db.VarChar(100)
+  city          String @db.VarChar(50)
+  province      String @db.VarChar(50)
   postalCode    String @db.VarChar(5)
 
   // --- rekening pencairan dana ---
-  bankName          String @db.VarChar(100)
+  bankName          String @db.VarChar(50)
   bankAccountNumber String @db.VarChar(30)
-  bankAccountHolder String @db.VarChar(150) // harus sama dengan legalName
+  bankAccountHolder String @db.VarChar(200) // harus sama dengan legalName
 
   createdAt DateTime  @default(now()) @db.Timestamptz(6)
   updatedAt DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
