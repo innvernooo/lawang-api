@@ -38,16 +38,18 @@ export class OrganizerService {
 
     const hashPassword = Bcrypt.hashPassword(body?.password, 10);
 
-    const cloudinaryUploadUrl = await cloudionaryUpload(
-      file[0]?.buffer,
-      'OrganizerPicture',
-    );
+    const cloudinaryUploadUrl = file[0]
+      ? ((await cloudionaryUpload(
+          file[0]?.buffer,
+          'OrganizerPicture',
+        )) as string)
+      : undefined;
 
     return prisma.organizer.create({
       data: {
         ...body,
         password: await hashPassword,
-        profilePictureUrl: `${cloudinaryUploadUrl}`,
+        profilePictureUrl: cloudinaryUploadUrl,
       },
       omit: {
         password: true,

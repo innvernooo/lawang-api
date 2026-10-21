@@ -7,9 +7,13 @@ const emptyToUndefined = (v: unknown) =>
   typeof v === 'string' && v.trim() === '' ? undefined : v;
 
 const email = z
-  .email('Invalid email format')
+  .string()
   .trim()
-  .max(255, 'Email input has maximum 255 characters');
+  .pipe(
+    z
+      .email('Invalid email format')
+      .max(255, 'Email input has maximum 255 characters'),
+  );
 
 const username = z
   .string()
@@ -34,6 +38,7 @@ const organizerType = z.enum(
 
 const legalName = z
   .string()
+  .trim()
   .min(1, 'Legal Name input is required')
   .max(200, 'Maximum input is 200 characters');
 
@@ -55,7 +60,9 @@ const instagramUrl = z.preprocess(
 const npwp = z
   .string()
   .trim()
-  .regex(/^[0-9]{16}$/, 'NPWP must be 16 digits');
+  .regex(/^\+?[0-9]+$/, 'NPWP input must contain digits only')
+  .min(15, 'Minimum length is 15 characters')
+  .max(16, 'Maximum length is 16 characters');
 
 const nib = z.preprocess(
   emptyToUndefined,
@@ -96,11 +103,13 @@ const bankName = z.enum(banks, 'Pick one of the banks');
 
 const bankAccountNumber = z
   .string()
+  .trim()
   .min(1, 'Bank account number input is required')
   .max(30, 'Maximum input is 30 characters');
 
 const bankAccountHolder = z
   .string()
+  .trim()
   .min(1, 'Bank account holder input is required')
   .max(200, 'Maximum input is 200 characters');
 
