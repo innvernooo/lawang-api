@@ -65,17 +65,19 @@ export class CustomerService {
     if (body.referralCode && !referrer)
       throw new AppError(400, 'Referral code not found');
 
-    const cloudinaryUploadUrl = await cloudionaryUpload(
-      file[0]?.buffer,
-      'CustomerPicture',
-    );
+    const cloudinaryUploadUrl = file[0]
+      ? ((await cloudionaryUpload(
+          file[0]?.buffer,
+          'CustomerPicture',
+        )) as string)
+      : undefined;
 
     return prisma.$transaction(async (tx) => {
       const user = await tx.customer.create({
         data: {
           ...body,
           password: await hashPassword,
-          profilePictureUrl: `${cloudinaryUploadUrl}`,
+          profilePictureUrl: cloudinaryUploadUrl,
           referralCode: generateReferralCode(),
           referredById: referrer?.id,
         },
