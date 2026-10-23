@@ -3,8 +3,10 @@ import { prisma } from '../../configs/prisma-client.config';
 import { cloudionaryUpload } from '../../lib/cloudinary.lib';
 import {
   CreateEventOutput,
+  GetEventDetailRequest,
   GetUpcomingEventsRequest,
 } from '../../validators/event.validator';
+import { AppError } from '../../errors/app.error';
 
 export class EventService {
   static async create(
@@ -43,5 +45,18 @@ export class EventService {
       take: query.limit,
       skip: offset,
     });
+  }
+
+  static async getEventDetail({ params }: GetEventDetailRequest) {
+    const findEventId = await prisma.event.findUnique({
+      where: {
+        id: params.id,
+      },
+    });
+
+    if (!findEventId)
+      throw new AppError(404, `Event with ID${params.id} does not exist`);
+
+    return findEventId;
   }
 }
