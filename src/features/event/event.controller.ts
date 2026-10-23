@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { validate } from '../../validators/validate';
 import {
   createEventSchema,
+  getEventDetailSchema,
   getUpcomingEventsSchema,
 } from '../../validators/event.validator';
 import { EventService } from './event.service';
@@ -35,6 +36,18 @@ export class EventController {
     res.status(200).json({
       success: true,
       message: 'Upcoming events retrieved successfully',
+      data: event,
+    });
+  }
+
+  static async getEventDetail(req: Request, res: Response) {
+    const { params } = validate(getEventDetailSchema, { params: req.params });
+
+    const event = await EventService.getEventDetail({ params });
+
+    res.status(200).json({
+      success: true,
+      message: 'Event detail retrieved successfully',
       data: event,
     });
   }

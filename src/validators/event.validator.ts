@@ -95,6 +95,16 @@ export const getUpcomingEventsSchema = z.object({
   }),
 });
 
+export const getEventDetailSchema = z.object({
+  params: z.object({
+    id: z
+      .uuid('Event ID is not valid')
+      .min(1, 'Event ID is required')
+      .max(70, 'You have reached maximum charaters input'),
+  }),
+});
+
 export type CreateEventInput = z.input<typeof createEventSchema>;
 export type CreateEventOutput = z.output<typeof createEventSchema>;
 export type GetUpcomingEventsRequest = z.infer<typeof getUpcomingEventsSchema>;
+export type GetEventDetailRequest = z.infer<typeof getEventDetailSchema>;

@@ -14,5 +14,5 @@ eventRouter.post(
   ]),
   EventController.create,
 );
-
 eventRouter.get('/upcomingEvents', EventController.upcomingEvents);
+eventRouter.get('/eventDetail/:id', EventController.getEventDetail);
