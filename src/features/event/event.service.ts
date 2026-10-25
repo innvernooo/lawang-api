@@ -32,6 +32,9 @@ export class EventService {
     const offset = (query.page - 1) * query.limit;
 
     return await prisma.event.findMany({
+      where: {
+        startDate: { gt: new Date() },
+      },
       include: {
         organizer: {
           select: {
@@ -43,7 +46,6 @@ export class EventService {
         startDate: 'asc',
       },
       take: query.limit,
-      skip: offset,
     });
   }
 
@@ -51,6 +53,14 @@ export class EventService {
     const findEventId = await prisma.event.findUnique({
       where: {
         id: params.id,
+      },
+      include: {
+        organizer: {
+          select: {
+            organizerName: true,
+            profilePictureUrl: true,
+          },
+        },
       },
     });
 

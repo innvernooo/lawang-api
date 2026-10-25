@@ -22,4 +22,16 @@ export class AuthController {
       data: safeUser,
     });
   }
+
+  static async me(req: Request, res: Response) {
+    const { payload } = res.locals;
+
+    const user = await AuthService.me(payload?.id, payload?.role);
+
+    res.status(200).json({
+      success: true,
+      message: 'User data retrieved successfully',
+      data: user,
+    });
+  }
 }
