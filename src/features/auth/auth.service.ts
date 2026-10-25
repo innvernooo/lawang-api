@@ -4,6 +4,7 @@ import { AppError } from '../../errors/app.error';
 import { Bcrypt } from '../../lib/bcrypt.lib';
 import { Jwt } from '../../lib/jwt.lib';
 import { LoginInput } from '../../validators/auth.validator';
+import { tr } from 'zod/locales';
 
 export class AuthService {
   static async login({ body }: LoginInput) {
@@ -51,5 +52,34 @@ export class AuthService {
 
     const { password, nik, deletedAt, ...safeUser } = user;
     return { token, safeUser };
+  }
+
+  static async me(id: string, role: string) {
+    const identifyUser =
+      role === 'ORGANIZER'
+        ? await prisma.organizer.findUnique({
+            where: {
+              id,
+            },
+            select: {
+              id: true,
+              email: true,
+              organizerName: true,
+              role: true,
+            },
+          })
+        : await prisma.customer.findUnique({
+            where: {
+              id,
+            },
+            select: {
+              id: true,
+              email: true,
+              username: true,
+              role: true,
+            },
+          });
+
+    return identifyUser;
   }
 }

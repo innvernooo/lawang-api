@@ -211,6 +211,7 @@ model TicketType {
   price     Int
   quota     Int
   available Int
+  endSale   DateTime? @db.Timestamptz(6)
 
   // --- relasi ---
   event        Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
