@@ -51,4 +51,16 @@ export class EventController {
       data: event,
     });
   }
+
+  static async getOrganizerEvent(req: Request, res: Response) {
+    const { payload } = res.locals;
+
+    const event = await EventService.getOrganizerEvent(payload.id);
+
+    res.status(200).json({
+      success: true,
+      message: 'Events retrieved successfully',
+      data: event,
+    });
+  }
 }

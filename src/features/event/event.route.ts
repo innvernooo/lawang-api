@@ -16,3 +16,9 @@ eventRouter.post(
 );
 eventRouter.get('/upcomingEvents', EventController.upcomingEvents);
 eventRouter.get('/eventDetail/:id', EventController.getEventDetail);
+eventRouter.get(
+  '/organizerEvents',
+  authenticate,
+  authorize(['ORGANIZER']),
+  EventController.getOrganizerEvent,
+);

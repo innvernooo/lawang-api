@@ -14,6 +14,8 @@ export class TicketService {
     });
 
     if (!findEventId) throw new AppError(404, 'Event not found');
+    if (findEventId.pricingType !== 'PAID')
+      throw new AppError(404, 'Free events cannot have ticket');
 
     return await prisma.ticketType.create({
       data: {

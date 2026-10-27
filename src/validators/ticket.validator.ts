@@ -40,7 +40,7 @@ export const addTicketTypeSchema = z.object({
         .number('Quota must be a number')
         .int('Quota must be a whole number')
         .min(1, 'Event price is required')
-        .max(1000, 'Maximum quota is 200'),
+        .max(1000, 'Maximum quota is 1000'),
     ),
     endSale: z.preprocess(emptyToUndefined, dateTime('End sale')).optional(),
   }),

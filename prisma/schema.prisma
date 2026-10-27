@@ -19,6 +19,11 @@ enum Role {
   ORGANIZER
 }
 
+enum PricingType {
+  PAID
+  FREE
+}
+
 enum OrganizerType {
   INDIVIDUAL // perorangan
   COMPANY // badan usaha (PT, CV, yayasan, dll.)
@@ -182,7 +187,7 @@ model Event {
   city           String        @db.VarChar(100)
   venue          String        @db.VarChar(200)
   imageUrl       String?       @db.VarChar(500)
-  price          Int           @default(0)
+  pricingType    PricingType
   startDate      DateTime      @db.Timestamptz(6)
   endDate        DateTime      @db.Timestamptz(6)
   totalSeats     Int

@@ -182,6 +182,15 @@ export class TransactionService {
           })),
         });
 
+      await tx.event.update({
+        where: {
+          id: params.eventId,
+        },
+        data: {
+          availableSeats: { decrement: body.quantity },
+        },
+      });
+
       return transaction;
     });
   }
