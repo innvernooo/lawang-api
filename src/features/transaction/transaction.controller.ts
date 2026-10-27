@@ -61,7 +61,7 @@ export class TransactionController {
 
     res.status(200).json({
       success: true,
-      message: 'Transaction updated successfully',
+      message: 'Transaction paid successfully',
       data: transaction,
     });
   }
