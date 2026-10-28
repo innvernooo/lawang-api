@@ -93,10 +93,31 @@ export const getUpcomingEventsSchema = z.object({
 
 export const getEventDetailSchema = z.object({
   params: z.object({
-    id: z
-      .uuid('Event ID is not valid')
-      .min(1, 'Event ID is required')
-      .max(70, 'You have reached maximum charaters input'),
+    slug: z
+      .string()
+      .trim()
+      .min(1, 'Event slug is required')
+      .max(200, 'You have reached maximum charaters input')
+      .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/i, 'Event slug is not valid'),
+  }),
+});
+
+export const getOrganizerEventDetailSchema = z.object({
+  params: z.object({
+    eventId: z.uuid('Event ID is not valid'),
+  }),
+});
+
+export const getEventCategoriesSchema = z.object({
+  query: z.object({
+    category: z.enum(categories).optional(),
+    search: z
+      .string()
+      .trim()
+      .max(100, 'Maximum search is 100 characters')
+      .optional(),
+    page: z.coerce.number('input must be a number').optional().default(1),
+    limit: z.coerce.number('input must be a number').optional().default(8),
   }),
 });
 
@@ -104,3 +125,9 @@ export type CreateEventInput = z.input<typeof createEventSchema>;
 export type CreateEventOutput = z.output<typeof createEventSchema>;
 export type GetUpcomingEventsRequest = z.infer<typeof getUpcomingEventsSchema>;
 export type GetEventDetailRequest = z.infer<typeof getEventDetailSchema>;
+export type GetOrganizerEventDetailRequest = z.infer<
+  typeof getOrganizerEventDetailSchema
+>;
+export type GetEventCategoriesRequest = z.infer<
+  typeof getEventCategoriesSchema
+>;

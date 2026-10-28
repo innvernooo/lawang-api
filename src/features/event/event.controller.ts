@@ -2,7 +2,9 @@ import { Request, Response } from 'express';
 import { validate } from '../../validators/validate';
 import {
   createEventSchema,
+  getEventCategoriesSchema,
   getEventDetailSchema,
+  getOrganizerEventDetailSchema,
   getUpcomingEventsSchema,
 } from '../../validators/event.validator';
 import { EventService } from './event.service';
@@ -61,6 +63,42 @@ export class EventController {
       success: true,
       message: 'Events retrieved successfully',
       data: event,
+    });
+  }
+
+  static async getOrganizerEventDetail(req: Request, res: Response) {
+    const { payload } = res.locals;
+    const { params } = validate(getOrganizerEventDetailSchema, {
+      params: req.params,
+    });
+
+    const event = await EventService.getOrganizerEventDetail(
+      { params },
+      payload.id,
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Events retrieved successfully',
+      data: event,
+    });
+  }
+
+  static async getEventCategories(req: Request, res: Response) {
+    const { query } = validate(getEventCategoriesSchema, { query: req.query });
+
+    const { events, page, totalEvent, totalPage } =
+      await EventService.getEventCategories({ query });
+
+    res.status(200).json({
+      success: true,
+      message: 'Events retrieved successfully',
+      data: events,
+      meta: {
+        page,
+        totalEvent,
+        totalPage,
+      },
     });
   }
 }

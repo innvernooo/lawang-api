@@ -192,6 +192,7 @@ model Event {
   endDate        DateTime      @db.Timestamptz(6)
   totalSeats     Int
   availableSeats Int
+  slug           String        @db.VarChar(200) @unique
   createdAt      DateTime      @default(now()) @db.Timestamptz(6)
   updatedAt      DateTime      @default(now()) @updatedAt @db.Timestamptz(6)
 
