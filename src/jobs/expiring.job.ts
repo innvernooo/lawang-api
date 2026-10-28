@@ -1,5 +1,4 @@
 import { prisma } from '../configs/prisma-client.config';
-import { AppError } from '../errors/app.error';
 import { restoreResources } from '../features/confirmation/confirm.helper';
 
 export async function PaymentExpiring() {
@@ -36,16 +35,12 @@ export async function PaymentExpiring() {
           },
         });
 
-        if (updated)
-          return new AppError(
-            409,
-            'Pembayaran sudah dicancel / direject / diaccept',
-          );
+        if (!updated) return;
 
         await restoreResources(tx, updated, now);
       });
     } catch (error) {
-      console.log('Expiring gagal dilakukan');
+      console.log(`Expiring gagal memproses transaksi ${t.id}`);
     }
   }
 }

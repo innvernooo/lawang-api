@@ -215,6 +215,11 @@ export class TransactionService {
             code: true,
           },
         },
+        event: {
+          select: {
+            pricingType: true,
+          },
+        },
       },
     });
 
