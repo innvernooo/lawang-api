@@ -2,17 +2,18 @@ import 'dotenv/config';
 import express from 'express';
 import { corsOptions } from './configs/cors.config';
 import cors from 'cors';
+import job from './jobs/expiringSchedule';
+import cookieParser from 'cookie-parser';
 import { errorMiddleware } from './middlewares/error.middleware';
 import { customerRouter } from './features/customer/customer.route';
-import cookieParser from 'cookie-parser';
 import { organizerRouter } from './features/organizer/organizer.route';
 import { authRouter } from './features/auth/auth.route';
 import { eventRouter } from './features/event/event.route';
 import { ticketRouter } from './features/ticket/ticket.route';
 import { transactionRouter } from './features/transaction/transaction.route';
 import { confirmationRouter } from './features/confirmation/confirm.route';
-import job from './jobs/expiringSchedule';
 import { voucherRouter } from './features/voucher/voucher.router';
+import { readingRouter } from './features/reading/reading.route';
 
 const PORT: number = parseInt(process.env.PORT!);
 const API_PREFIX: string = process.env.API_PREFIX!;
@@ -30,6 +31,7 @@ app.use(`${API_PREFIX}/tickets`, ticketRouter);
 app.use(`${API_PREFIX}/transactions`, transactionRouter);
 app.use(`${API_PREFIX}/confirmations`, confirmationRouter);
 app.use(`${API_PREFIX}/vouchers`, voucherRouter);
+app.use(`${API_PREFIX}/readings`, readingRouter);
 
 app.use(errorMiddleware);
 

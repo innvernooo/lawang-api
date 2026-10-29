@@ -15,6 +15,10 @@ eventRouter.post(
   EventController.create,
 );
 eventRouter.get('/upcomingEvents', EventController.upcomingEvents);
+eventRouter.get('/kpop', EventController.kpopEvents);
+eventRouter.get('/weekly', EventController.weeklyEvent);
+eventRouter.get('/music', EventController.musicEvent);
+eventRouter.get('/science', EventController.scienceEvent);
 eventRouter.get('/eventDetail/:slug', EventController.getEventDetail);
 eventRouter.get(
   '/organizerEvents',

@@ -39,12 +39,21 @@ enum TransactionStatus {
 }
 
 enum EventCategory {
-  MUSIC
+  MUSIK
   WORKSHOP
-  COMEDY
-  SPORTS
-  ARTS
+  KOMEDI
+  OLAHRAGA
+  SENI
   GAMES
+  SPIRITUALITAS
+  K_POP
+  KELUARGA
+  ALAM_TERBUKA
+  SAINS
+  PENDIDIKAN
+  BUDAYA
+  KESEHATAN
+  OTOMOTIF
 }
 
 // FEATURE 2: AUTH, REFERRAL, PRIZES
@@ -315,4 +324,17 @@ model Review {
   @@unique([customerId, eventId])
   @@index([eventId])
   @@map("reviews")
+}
+
+model Reading {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  imageUrl    String?   @db.VarChar(500)
+  title       String   @db.VarChar(200)
+  exceprt     String   @db.VarChar(200)
+  description String
+  author      String   @db.VarChar(100)
+  slug           String        @db.VarChar(200) @unique
+  createdAt  DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@map("readings")
 }

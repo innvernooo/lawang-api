@@ -42,6 +42,48 @@ export class EventController {
     });
   }
 
+  static async kpopEvents(req: Request, res: Response) {
+    const { query } = validate(getUpcomingEventsSchema, { query: req.query });
+
+    const event = await EventService.getKpopEvents({ query });
+
+    res.status(200).json({
+      success: true,
+      message: 'K-pop Events retrieved successfully',
+      data: event,
+    });
+  }
+
+  static async weeklyEvent(_: Request, res: Response) {
+    const event = await EventService.getWeeklyEvents();
+
+    res.status(200).json({
+      success: true,
+      message: 'Weekly Events retrieved successfully',
+      data: event,
+    });
+  }
+
+  static async musicEvent(_: Request, res: Response) {
+    const event = await EventService.getMusicEvents();
+
+    res.status(200).json({
+      success: true,
+      message: 'Music Events retrieved successfully',
+      data: event,
+    });
+  }
+
+  static async scienceEvent(_: Request, res: Response) {
+    const event = await EventService.getScienceEvents();
+
+    res.status(200).json({
+      success: true,
+      message: 'Science Events retrieved successfully',
+      data: event,
+    });
+  }
+
   static async getEventDetail(req: Request, res: Response) {
     const { params } = validate(getEventDetailSchema, { params: req.params });
 
@@ -54,7 +96,7 @@ export class EventController {
     });
   }
 
-  static async getOrganizerEvent(req: Request, res: Response) {
+  static async getOrganizerEvent(_: Request, res: Response) {
     const { payload } = res.locals;
 
     const event = await EventService.getOrganizerEvent(payload.id);
