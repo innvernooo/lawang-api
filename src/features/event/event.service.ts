@@ -62,9 +62,29 @@ export class EventService {
   }
 
   static async getUpcomingEvents({ query }: GetUpcomingEventsRequest) {
+    const now = new Date();
+    const endOfYear = new Date('2027-01-01T00:00:00+07:00');
+
     return await prisma.event.findMany({
       where: {
-        startDate: { gt: new Date() },
+        startDate: { gt: now, lt: endOfYear },
+      },
+      include: {
+        organizer: {
+          select: {
+            organizerName: true,
+          },
+        },
+      },
+      take: query.limit,
+    });
+  }
+
+  static async getKpopEvents({ query }: GetUpcomingEventsRequest) {
+    return await prisma.event.findMany({
+      where: {
+        category: 'K_POP',
+        startDate: { gte: new Date() },
       },
       include: {
         organizer: {
@@ -77,6 +97,79 @@ export class EventService {
         startDate: 'asc',
       },
       take: query.limit,
+    });
+  }
+
+  static async getWeeklyEvents() {
+    const WIB = 7 * 60 * 60 * 1000;
+    const now = new Date();
+
+    const wib = new Date(now.getTime() + WIB);
+    const day = wib.getUTCDay();
+    const daysUntilMonday = day === 0 ? 1 : 8 - day;
+
+    const endOfWeek = new Date(
+      Date.UTC(
+        wib.getUTCFullYear(),
+        wib.getUTCMonth(),
+        wib.getUTCDate() + daysUntilMonday,
+      ) - WIB,
+    );
+
+    return await prisma.event.findMany({
+      where: {
+        startDate: { gt: now, lt: endOfWeek },
+      },
+      include: {
+        organizer: {
+          select: {
+            organizerName: true,
+          },
+        },
+      },
+      orderBy: {
+        startDate: 'asc',
+      },
+    });
+  }
+
+  static async getMusicEvents() {
+    return await prisma.event.findMany({
+      where: {
+        category: 'MUSIK',
+        startDate: { gte: new Date() },
+      },
+      include: {
+        organizer: {
+          select: {
+            organizerName: true,
+          },
+        },
+      },
+      orderBy: {
+        startDate: 'asc',
+      },
+      take: 12,
+    });
+  }
+
+  static async getScienceEvents() {
+    return await prisma.event.findMany({
+      where: {
+        category: 'SAINS',
+        startDate: { gte: new Date() },
+      },
+      include: {
+        organizer: {
+          select: {
+            organizerName: true,
+          },
+        },
+      },
+      orderBy: {
+        startDate: 'asc',
+      },
+      take: 12,
     });
   }
 
@@ -133,6 +226,7 @@ export class EventService {
 
     const where: Prisma.EventWhereInput = {
       category: query.category,
+      city: query.city,
       startDate: { gt: new Date() },
       ...(query.search && {
         OR: [

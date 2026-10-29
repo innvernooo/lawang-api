@@ -1,0 +1,56 @@
+import { prisma } from '../../configs/prisma-client.config';
+import slugify from 'slugify';
+import {
+  CreateReadingRequest,
+  DetailReadingRequest,
+} from '../../validators/reading.validator';
+import { Multer } from 'multer';
+import { cloudionaryUpload } from '../../lib/cloudinary.lib';
+import { AppError } from '../../errors/app.error';
+
+export class ReadingService {
+  static async create(
+    { body }: CreateReadingRequest,
+    file: Express.Multer.File[],
+  ) {
+    const slug = slugify(body.title, { lower: true, strict: true }).slice(
+      0,
+      190,
+    );
+
+    const cloudinaryUploadUrl = file[0]
+      ? ((await cloudionaryUpload(file[0]?.buffer, 'readingPicture')) as string)
+      : undefined;
+
+    return prisma.reading.create({
+      data: {
+        ...body,
+        slug,
+        imageUrl: await cloudinaryUploadUrl,
+      },
+      omit: {
+        description: true,
+      },
+    });
+  }
+
+  static async getReading() {
+    return await prisma.reading.findMany({
+      omit: {
+        description: true,
+      },
+    });
+  }
+
+  static async detail({ slug }: DetailReadingRequest) {
+    const checkSlug = await prisma.reading.findUnique({
+      where: {
+        slug,
+      },
+    });
+
+    if (!checkSlug) throw new AppError(404, 'Blog slug not found');
+
+    return checkSlug;
+  }
+}

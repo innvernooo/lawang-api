@@ -13,12 +13,21 @@ const dateTime = (label: string) =>
     .pipe(z.coerce.date());
 
 const categories = [
+  'MUSIK',
   'WORKSHOP',
-  'MUSIC',
-  'SPORTS',
-  'ARTS',
+  'KOMEDI',
+  'OLAHRAGA',
+  'SENI',
   'GAMES',
-  'COMEDY',
+  'SPIRITUALITAS',
+  'K_POP',
+  'KELUARGA',
+  'ALAM_TERBUKA',
+  'SAINS',
+  'PENDIDIKAN',
+  'BUDAYA',
+  'KESEHATAN',
+  'OTOMOTIF',
 ] as const;
 
 const organizerId = z.preprocess(
@@ -111,6 +120,7 @@ export const getOrganizerEventDetailSchema = z.object({
 export const getEventCategoriesSchema = z.object({
   query: z.object({
     category: z.enum(categories).optional(),
+    city: z.enum(cities, 'Pick one of the cities').optional(),
     search: z
       .string()
       .trim()

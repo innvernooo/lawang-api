@@ -247,10 +247,9 @@ export class TransactionService {
     )
       throw new AppError(400, 'Payment time has expired');
 
-    const cloudinaryUploadUrl = (await cloudionaryUpload(
-      file.buffer,
-      'paymentProof',
-    )) as string;
+    const cloudinaryUploadUrl = file
+      ? ((await cloudionaryUpload(file!.buffer, 'paymentProof')) as string)
+      : undefined;
 
     const updated = await prisma.transaction.updateMany({
       where: {

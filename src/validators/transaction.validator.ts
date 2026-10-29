@@ -123,15 +123,17 @@ export const paymentSchema = z.object({
   params: z.object({
     transactionId: z.uuid('Transaction ID is not valid'),
   }),
-  file: z
-    .custom<Express.Multer.File>((f) => !!f, 'Payment proof is required')
-    .refine(
-      (f) => f.mimetype.startsWith('image/'),
-      'Payment proof must be an image',
-    ),
+  file: z.preprocess(
+    emptyToUndefined,
+    z
+      .custom<Express.Multer.File>((f) => !!f, 'Payment proof is required')
+      .refine(
+        (f) => f.mimetype.startsWith('image/'),
+        'Payment proof must be an image',
+      )
+      .optional(),
+  ),
 });
-
-
 
 export type CreateTransactionInput = z.input<typeof createTransactionSchema>;
 export type CreateTransactionOutput = z.output<typeof createTransactionSchema>;
