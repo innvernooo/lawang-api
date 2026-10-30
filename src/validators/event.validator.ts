@@ -13,12 +13,21 @@ const dateTime = (label: string) =>
     .pipe(z.coerce.date());
 
 const categories = [
+  'MUSIK',
   'WORKSHOP',
-  'MUSIC',
-  'SPORTS',
-  'ARTS',
+  'KOMEDI',
+  'OLAHRAGA',
+  'SENI',
   'GAMES',
-  'COMEDY',
+  'SPIRITUALITAS',
+  'K_POP',
+  'KELUARGA',
+  'ALAM_TERBUKA',
+  'SAINS',
+  'PENDIDIKAN',
+  'BUDAYA',
+  'KESEHATAN',
+  'OTOMOTIF',
 ] as const;
 
 const organizerId = z.preprocess(
@@ -46,13 +55,9 @@ const venue = z
   .min(1, 'Event venue is required')
   .max(200, 'Maximum input is 200 characters');
 
-const price = z.preprocess(
-  emptyToUndefined,
-  z.coerce
-    .number('Price must be a number')
-    .int('Price must be a whole number')
-    .min(1, 'Event price is required')
-    .max(2000000000, 'Price is too large'),
+const pricingType = z.enum(
+  ['PAID', 'FREE'],
+  'Pricing type must be PAID or FREE',
 );
 
 const startDate = dateTime('Start date').refine(
@@ -81,7 +86,7 @@ export const createEventSchema = z.object({
     category,
     city,
     venue,
-    price,
+    pricingType,
     startDate,
     endDate,
     totalSeats,
@@ -97,10 +102,32 @@ export const getUpcomingEventsSchema = z.object({
 
 export const getEventDetailSchema = z.object({
   params: z.object({
-    id: z
-      .uuid('Event ID is not valid')
-      .min(1, 'Event ID is required')
-      .max(70, 'You have reached maximum charaters input'),
+    slug: z
+      .string()
+      .trim()
+      .min(1, 'Event slug is required')
+      .max(200, 'You have reached maximum charaters input')
+      .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/i, 'Event slug is not valid'),
+  }),
+});
+
+export const getOrganizerEventDetailSchema = z.object({
+  params: z.object({
+    eventId: z.uuid('Event ID is not valid'),
+  }),
+});
+
+export const getEventCategoriesSchema = z.object({
+  query: z.object({
+    category: z.enum(categories).optional(),
+    city: z.enum(cities, 'Pick one of the cities').optional(),
+    search: z
+      .string()
+      .trim()
+      .max(100, 'Maximum search is 100 characters')
+      .optional(),
+    page: z.coerce.number('input must be a number').optional().default(1),
+    limit: z.coerce.number('input must be a number').optional().default(8),
   }),
 });
 
@@ -108,3 +135,9 @@ export type CreateEventInput = z.input<typeof createEventSchema>;
 export type CreateEventOutput = z.output<typeof createEventSchema>;
 export type GetUpcomingEventsRequest = z.infer<typeof getUpcomingEventsSchema>;
 export type GetEventDetailRequest = z.infer<typeof getEventDetailSchema>;
+export type GetOrganizerEventDetailRequest = z.infer<
+  typeof getOrganizerEventDetailSchema
+>;
+export type GetEventCategoriesRequest = z.infer<
+  typeof getEventCategoriesSchema
+>;

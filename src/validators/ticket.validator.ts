@@ -3,6 +3,14 @@ import * as z from 'zod';
 const emptyToUndefined = (v: unknown) =>
   typeof v === 'string' && v.trim() === '' ? undefined : v;
 
+const dateTime = (label: string) =>
+  z.iso
+    .datetime({
+      offset: true,
+      message: `${label} must be a valid date-time with timezone, e.g. 2026-07-20T19:00:00+07:00`,
+    })
+    .pipe(z.coerce.date());
+
 export const addTicketTypeSchema = z.object({
   params: z.object({
     eventId: z
@@ -32,8 +40,9 @@ export const addTicketTypeSchema = z.object({
         .number('Quota must be a number')
         .int('Quota must be a whole number')
         .min(1, 'Event price is required')
-        .max(1000, 'Maximum quota is 200'),
+        .max(1000, 'Maximum quota is 1000'),
     ),
+    endSale: z.preprocess(emptyToUndefined, dateTime('End sale')).optional(),
   }),
 });
 

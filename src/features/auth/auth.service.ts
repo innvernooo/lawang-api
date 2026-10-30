@@ -4,6 +4,7 @@ import { AppError } from '../../errors/app.error';
 import { Bcrypt } from '../../lib/bcrypt.lib';
 import { Jwt } from '../../lib/jwt.lib';
 import { LoginInput } from '../../validators/auth.validator';
+import { tr } from 'zod/locales';
 
 export class AuthService {
   // ===== FUNGSI LOGIN (isi asli rekanmu, tidak diubah) =====
@@ -58,21 +59,32 @@ export class AuthService {
     };
   }
 
-  // ===== FUNGSI ME (baru, mengambil profil user yang sedang login) =====
-  static async me(userId: string, role: string) {
-    const where = { id: userId, deletedAt: null };
+  static async me(id: string, role: string) {
+    const identifyUser =
+      role === 'ORGANIZER'
+        ? await prisma.organizer.findUnique({
+            where: {
+              id,
+            },
+            select: {
+              id: true,
+              email: true,
+              organizerName: true,
+              role: true,
+            },
+          })
+        : await prisma.customer.findUnique({
+            where: {
+              id,
+            },
+            select: {
+              id: true,
+              email: true,
+              username: true,
+              role: true,
+            },
+          });
 
-    // Role dari token menentukan tabel mana yang dicari
-    if (role === 'ORGANIZER') {
-      const organizer = await prisma.organizer.findFirst({ where });
-      if (!organizer) throw new AppError(404, 'User not found');
-      const { password, deletedAt, ...safeUser } = organizer;
-      return safeUser;
-    }
-
-    const customer = await prisma.customer.findFirst({ where });
-    if (!customer) throw new AppError(404, 'User not found');
-    const { password, deletedAt, ...safeUser } = customer;
-    return safeUser;
+    return identifyUser;
   }
 }

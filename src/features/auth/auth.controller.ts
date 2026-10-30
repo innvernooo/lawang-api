@@ -24,12 +24,13 @@ export class AuthController {
   }
 
   static async me(req: Request, res: Response) {
-    const { id, role } = res.locals.payload; // diisi oleh authenticate dari token
-    const user = await AuthService.me(id, role);
+    const { payload } = res.locals;
+
+    const user = await AuthService.me(payload?.id, payload?.role);
 
     res.status(200).json({
       success: true,
-      message: 'Success',
+      message: 'User data retrieved successfully',
       data: user,
     });
   }
