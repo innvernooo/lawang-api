@@ -6,6 +6,7 @@ import { Jwt } from '../../lib/jwt.lib';
 import { LoginInput } from '../../validators/auth.validator';
 
 export class AuthService {
+  // ===== FUNGSI LOGIN (isi asli rekanmu, tidak diubah) =====
   static async login({ body }: LoginInput) {
     const where = {
       deletedAt: null,
@@ -49,7 +50,29 @@ export class AuthService {
       };
     }
 
-    const { password, nik, deletedAt, ...safeUser } = user;
-    return { token, safeUser };
+    // ← SAYA TEBAK: cabang customer, mengikuti pola organizer di atas
+    const { password, deletedAt, ...safeUser } = user;
+    return {
+      token,
+      safeUser,
+    };
+  }
+
+  // ===== FUNGSI ME (baru, mengambil profil user yang sedang login) =====
+  static async me(userId: string, role: string) {
+    const where = { id: userId, deletedAt: null };
+
+    // Role dari token menentukan tabel mana yang dicari
+    if (role === 'ORGANIZER') {
+      const organizer = await prisma.organizer.findFirst({ where });
+      if (!organizer) throw new AppError(404, 'User not found');
+      const { password, deletedAt, ...safeUser } = organizer;
+      return safeUser;
+    }
+
+    const customer = await prisma.customer.findFirst({ where });
+    if (!customer) throw new AppError(404, 'User not found');
+    const { password, deletedAt, ...safeUser } = customer;
+    return safeUser;
   }
 }

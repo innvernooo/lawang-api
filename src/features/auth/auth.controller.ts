@@ -8,7 +8,7 @@ export class AuthController {
     const { body } = validate(loginSchema, { body: req.body });
 
     const { token, safeUser } = await AuthService.login({ body });
-  
+
     res.cookie('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'PRODUCTION',
@@ -20,6 +20,17 @@ export class AuthController {
       success: true,
       message: 'User logged in successfully',
       data: safeUser,
+    });
+  }
+
+  static async me(req: Request, res: Response) {
+    const { id, role } = res.locals.payload; // diisi oleh authenticate dari token
+    const user = await AuthService.me(id, role);
+
+    res.status(200).json({
+      success: true,
+      message: 'Success',
+      data: user,
     });
   }
 }
