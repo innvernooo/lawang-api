@@ -65,4 +65,18 @@ export class TransactionController {
       data: transaction,
     });
   }
+
+  static async customerDetail(_: Request, res: Response) {
+    const { payload } = res.locals;
+
+    const { findTransaction, findCustomer } =
+      await TransactionService.customerDetail(payload.id);
+
+    res.status(200).json({
+      success: true,
+      message: 'Transactions retrieved successfully',
+      data: findTransaction,
+      customer: findCustomer,
+    });
+  }
 }

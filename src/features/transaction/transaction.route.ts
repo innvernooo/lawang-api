@@ -13,6 +13,13 @@ transactionRouter.post(
 );
 
 transactionRouter.get(
+  '/me',
+  authenticate,
+  authorize(['CUSTOMER']),
+  TransactionController.customerDetail,
+);
+
+transactionRouter.get(
   '/:transactionId',
   authenticate,
   authorize(['CUSTOMER']),

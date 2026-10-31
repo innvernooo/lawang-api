@@ -25,15 +25,6 @@ export class EventService {
       slugify(body.name, { lower: true, strict: true }).slice(0, 190) ||
       'event';
     let slug = base;
-    let n = 1;
-    while (
-      await prisma.event.findUnique({
-        where: {
-          slug,
-        },
-      })
-    )
-      slug = `${base}-${++n}`;
 
     return await prisma.$transaction(async (tx) => {
       const createEvent = await tx.event.create({
