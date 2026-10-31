@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { OrganizerController } from './organizer.controller';
 import { uploadMiddleware } from '../../middlewares/upload.middleware';
+import { authenticate, authorize } from '../../middlewares/auth.middleware';
 
 export const organizerRouter = Router();
 
@@ -10,4 +11,11 @@ organizerRouter.post(
     { name: 'profilePicture', maxCount: 1 },
   ]),
   OrganizerController.register,
+);
+
+organizerRouter.get(
+  '/me',
+  authenticate,
+  authorize(['ORGANIZER']),
+  OrganizerController.profile,
 );

@@ -6,6 +6,7 @@ import { Bcrypt } from '../../lib/bcrypt.lib';
 import { Jwt } from '../../lib/jwt.lib';
 import { OrganizerRegisterOutput } from '../../validators/organizer.validator';
 import { cloudionaryUpload } from '../../lib/cloudinary.lib';
+import { id } from 'zod/locales';
 
 export class OrganizerService {
   static async register(
@@ -55,6 +56,14 @@ export class OrganizerService {
         password: true,
         picNik: true,
         deletedAt: true,
+      },
+    });
+  }
+
+  static async profile(organizerId: string) {
+    return await prisma.organizer.findUnique({
+      where: {
+        id: organizerId,
       },
     });
   }
