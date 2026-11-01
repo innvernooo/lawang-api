@@ -23,13 +23,21 @@ export class ReviewService {
       where: {
         eventId: checkSlug.id,
         customerId,
+        status: 'DONE',
       },
     });
 
     if (!checkTransaction)
       throw new AppError(409, 'You were not attending this event');
-    if (checkTransaction.status !== 'DONE')
-      throw new AppError(409, 'Your transaction is not DONE yet');
+
+    const checkReview = await prisma.review.findFirst({
+      where: {
+        eventId: checkSlug.id,
+        customerId,
+      },
+    });
+
+    if (checkReview) throw new AppError(409, 'You have rated this event');
 
     return await prisma.review.create({
       data: {
@@ -54,7 +62,16 @@ export class ReviewService {
             category: true,
             startDate: true,
             endDate: true,
-            slug: true
+            slug: true,
+            reviews: {
+              where: {
+                customerId,
+              },
+              select: {
+                id: true,
+                rating: true,
+              },
+            },
           },
         },
       },
