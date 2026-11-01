@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { validate } from '../../validators/validate';
-import { createReviewSchema } from '../../validators/review.validator';
+import {
+  createReviewSchema,
+} from '../../validators/review.validator';
 import { ReviewService } from './review.service';
 
 export class ReviewController {
@@ -20,7 +22,7 @@ export class ReviewController {
     });
   }
 
-  static async getEventByCustomer(req: Request, res: Response) {
+  static async getEventByCustomer(_: Request, res: Response) {
     const { payload } = res.locals;
 
     const { getCustomer, getEvent } = await ReviewService.getEventByCustomer(
