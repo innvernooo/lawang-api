@@ -21,3 +21,9 @@ customerRouter.patch(
   ]),
   CustomerController.patch,
 );
+customerRouter.get(
+  '/me',
+  authenticate,
+  authorize(['CUSTOMER']),
+  CustomerController.me,
+);

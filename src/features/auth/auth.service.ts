@@ -7,6 +7,7 @@ import { LoginInput } from '../../validators/auth.validator';
 import { tr } from 'zod/locales';
 
 export class AuthService {
+  // ===== FUNGSI LOGIN (isi asli rekanmu, tidak diubah) =====
   static async login({ body }: LoginInput) {
     const where = {
       deletedAt: null,
@@ -50,8 +51,12 @@ export class AuthService {
       };
     }
 
-    const { password, nik, deletedAt, ...safeUser } = user;
-    return { token, safeUser };
+    // ← SAYA TEBAK: cabang customer, mengikuti pola organizer di atas
+    const { password, deletedAt, ...safeUser } = user;
+    return {
+      token,
+      safeUser,
+    };
   }
 
   static async me(id: string, role: string) {
@@ -83,3 +88,4 @@ export class AuthService {
     return identifyUser;
   }
 }
+

@@ -46,4 +46,16 @@ export class CustomerController {
       data: user,
     });
   }
+
+  static async me(_: Request, res: Response) {
+    const { payload } = res.locals;
+
+    const user = await CustomerService.me(payload.id);
+
+    res.status(200).json({
+      success: true,
+      message: 'Customer data retrieved successfully',
+      data: user,
+    });
+  }
 }
