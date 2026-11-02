@@ -108,6 +108,7 @@ export class EventController {
     });
   }
 
+  //Ini controller untuk ambil event organizer
   static async getOrganizerEventDetail(req: Request, res: Response) {
     const { payload } = res.locals;
     const { params } = validate(getOrganizerEventDetailSchema, {

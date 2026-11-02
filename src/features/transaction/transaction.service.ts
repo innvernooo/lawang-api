@@ -1,6 +1,10 @@
 import { prisma } from '../../configs/prisma-client.config';
 import { AppError } from '../../errors/app.error';
 import { cloudionaryUpload } from '../../lib/cloudinary.lib';
+import transporter from '../../lib/transporter.lib';
+import fs from 'fs';
+import path from 'path';
+import Handlebars from 'handlebars';
 import {
   CreateTransactionOutput,
   GetDetailTrasanctionOutput,
@@ -246,33 +250,66 @@ export class TransactionService {
       checkTransactionId.paymentExpiresAt <= now
     )
       throw new AppError(400, 'Payment time has expired');
+    return await prisma.$transaction(async (tx) => {
+      const cloudinaryUploadUrl = file
+        ? ((await cloudionaryUpload(file!.buffer, 'paymentProof')) as string)
+        : undefined;
 
-    const cloudinaryUploadUrl = file
-      ? ((await cloudionaryUpload(file!.buffer, 'paymentProof')) as string)
-      : undefined;
+      const updated = await tx.transaction.updateMany({
+        where: {
+          id: params.transactionId,
+          customerId,
+          status: 'WAITING_PAYMENT',
+          paymentExpiresAt: { gt: now },
+        },
+        data: {
+          paymentProofUrl: cloudinaryUploadUrl,
+          paymentProofUploadedAt: now,
+          status: 'WAITING_CONFIRMATION',
+          confirmDeadlineAt: new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000),
+        },
+      });
 
-    const updated = await prisma.transaction.updateMany({
-      where: {
-        id: params.transactionId,
-        customerId,
-        status: 'WAITING_PAYMENT',
-        paymentExpiresAt: { gt: now },
-      },
-      data: {
-        paymentProofUrl: cloudinaryUploadUrl,
-        paymentProofUploadedAt: now,
-        status: 'WAITING_CONFIRMATION',
-        confirmDeadlineAt: new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000),
-      },
-    });
+      if (updated.count === 0)
+        throw new AppError(409, 'Transaction can no longer be paid');
 
-    if (updated.count === 0)
-      throw new AppError(409, 'Transaction can no longer be paid');
+      const result = await tx.transaction.findUnique({
+        where: {
+          id: params.transactionId,
+        },
+        include: {
+          customer: true,
+          event: true,
+        },
+      });
 
-    return await prisma.transaction.findUnique({
-      where: {
-        id: params.transactionId,
-      },
+      const mainDir = path.join(process.cwd());
+      const templateHTML = fs.readFileSync(
+        `${mainDir}/src/templates/payment-succesfull.html`,
+        'utf-8',
+      );
+      const templateHTMLCompiled = Handlebars.compile(templateHTML);
+      const html = templateHTMLCompiled({
+        customerName: result?.customer?.name ?? 'Pelanggan',
+        transactionId: result?.id ?? '',
+        eventName: result?.event?.name,
+        paymentDate: now.toLocaleDateString('id-ID'),
+        amount: (result?.totalPrice ?? 0).toLocaleString('id-ID', {
+          style: 'currency',
+          currency: 'IDR',
+        }),
+        profileUrl: 'http://localhost:3000/profile',
+      });
+
+      const mailer = await transporter.sendMail({
+        to: result?.customer?.email,
+        subject: 'Selamat payment berhasil',
+        html: html,
+      });
+
+      console.log(mailer);
+
+      return result;
     });
   }
 

@@ -184,7 +184,7 @@ export class EventService {
 
     return findEvent;
   }
-
+//ini service untuk event organizer
   static async getOrganizerEventDetail(
     { params }: GetOrganizerEventDetailRequest,
     organizerId: string,
