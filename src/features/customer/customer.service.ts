@@ -148,4 +148,17 @@ export class CustomerService {
 
     return updated;
   }
+
+  static async me(customerId: string) {
+    return await prisma.customer.findUnique({
+      where: {
+        id: customerId,
+      },
+      omit: {
+        password: true,
+        id: true,
+        referredById: true,
+      },
+    });
+  }
 }

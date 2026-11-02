@@ -10,6 +10,7 @@ import {
   GetDetailTrasanctionOutput,
   PaymentOutput,
   pointStep,
+  TransPaginationRequest,
 } from '../../validators/transaction.validator';
 
 export class TransactionService {
@@ -250,70 +251,78 @@ export class TransactionService {
       checkTransactionId.paymentExpiresAt <= now
     )
       throw new AppError(400, 'Payment time has expired');
-    return await prisma.$transaction(async (tx) => {
-      const cloudinaryUploadUrl = file
-        ? ((await cloudionaryUpload(file!.buffer, 'paymentProof')) as string)
-        : undefined;
+    return await prisma.$transaction(
+      async (tx) => {
+        const cloudinaryUploadUrl = file
+          ? ((await cloudionaryUpload(file.buffer, 'paymentProof')) as string)
+          : undefined;
 
-      const updated = await tx.transaction.updateMany({
-        where: {
-          id: params.transactionId,
-          customerId,
-          status: 'WAITING_PAYMENT',
-          paymentExpiresAt: { gt: now },
-        },
-        data: {
-          paymentProofUrl: cloudinaryUploadUrl,
-          paymentProofUploadedAt: now,
-          status: 'WAITING_CONFIRMATION',
-          confirmDeadlineAt: new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000),
-        },
-      });
+        const updated = await tx.transaction.updateMany({
+          where: {
+            id: params.transactionId,
+            customerId,
+            status: 'WAITING_PAYMENT',
+            paymentExpiresAt: { gt: now },
+          },
+          data: {
+            paymentProofUrl: cloudinaryUploadUrl,
+            paymentProofUploadedAt: now,
+            status: 'WAITING_CONFIRMATION',
+            confirmDeadlineAt: new Date(
+              now.getTime() + 3 * 24 * 60 * 60 * 1000,
+            ),
+          },
+        });
 
-      if (updated.count === 0)
-        throw new AppError(409, 'Transaction can no longer be paid');
+        if (updated.count === 0)
+          throw new AppError(409, 'Transaction can no longer be paid');
 
-      const result = await tx.transaction.findUnique({
-        where: {
-          id: params.transactionId,
-        },
-        include: {
-          customer: true,
-          event: true,
-        },
-      });
+        const result = await tx.transaction.findUnique({
+          where: {
+            id: params.transactionId,
+          },
+          include: {
+            customer: true,
+            event: true,
+          },
+        });
 
-      const mainDir = path.join(process.cwd());
-      const templateHTML = fs.readFileSync(
-        `${mainDir}/src/templates/payment-succesfull.html`,
-        'utf-8',
-      );
-      const templateHTMLCompiled = Handlebars.compile(templateHTML);
-      const html = templateHTMLCompiled({
-        customerName: result?.customer?.name ?? 'Pelanggan',
-        transactionId: result?.id ?? '',
-        eventName: result?.event?.name,
-        paymentDate: now.toLocaleDateString('id-ID'),
-        amount: (result?.totalPrice ?? 0).toLocaleString('id-ID', {
-          style: 'currency',
-          currency: 'IDR',
-        }),
-        profileUrl: 'http://localhost:3000/profile',
-      });
+        const mainDir = path.join(process.cwd());
+        const templateHTML = fs.readFileSync(
+          `${mainDir}/src/templates/payment-succesfull.html`,
+          'utf-8',
+        );
+        const templateHTMLCompiled = Handlebars.compile(templateHTML);
+        const html = templateHTMLCompiled({
+          customerName: result?.customer?.name ?? 'Pelanggan',
+          transactionId: result?.id ?? '',
+          eventName: result?.event?.name,
+          paymentDate: now.toLocaleDateString('id-ID'),
+          amount: (result?.totalPrice ?? 0).toLocaleString('id-ID', {
+            style: 'currency',
+            currency: 'IDR',
+          }),
+          profileUrl: 'http://localhost:3000/profile',
+        });
 
-      const mailer = await transporter.sendMail({
-        to: result?.customer?.email,
-        subject: 'Selamat payment berhasil',
-        html: html,
-      });
+        const mailer = await transporter.sendMail({
+          to: result?.customer?.email,
+          subject: 'Selamat payment berhasil',
+          html: html,
+        });
 
-      console.log(mailer);
-
-      return result;
-    });
+        return result;
+      },
+      { timeout: 10000 },
+    );
   }
 
-  static async customerDetail(customerId: string) {
+  static async customerDetail(
+    { query }: TransPaginationRequest,
+    customerId: string,
+  ) {
+    const offset = (query.page - 1) * query.limit;
+
     const findTransaction = await prisma.transaction.findMany({
       where: {
         customerId,
@@ -330,8 +339,17 @@ export class TransactionService {
       orderBy: {
         createdAt: 'asc',
       },
+      take: query.limit,
+      skip: offset,
     });
 
+    const totalData = await prisma.transaction.count({
+      where: {
+        customerId,
+      },
+    });
+
+    const totalPage = Math.ceil(totalData / query.limit);
     const findCustomer = await prisma.customer.findUnique({
       where: {
         id: customerId,
@@ -340,6 +358,6 @@ export class TransactionService {
 
     if (!findTransaction) throw new AppError(404, 'Customer ID does not match');
 
-    return { findTransaction, findCustomer };
+    return { findTransaction, findCustomer, totalPage };
   }
 }

@@ -59,6 +59,7 @@ export class TicketService {
       },
       include: {
         ticketTypes: true,
+        vouchers: true
       },
     });
   }

@@ -4,6 +4,7 @@ import {
   createTransactionSchema,
   getDetailTrasanctionSchema,
   paymentSchema,
+  transpaginationSchema,
 } from '../../validators/transaction.validator';
 import { TransactionService } from './transaction.service';
 
@@ -66,17 +67,19 @@ export class TransactionController {
     });
   }
 
-  static async customerDetail(_: Request, res: Response) {
+  static async customerDetail(req: Request, res: Response) {
     const { payload } = res.locals;
+    const { query } = validate(transpaginationSchema, { query: req.query });
 
-    const { findTransaction, findCustomer } =
-      await TransactionService.customerDetail(payload.id);
+    const { findTransaction, findCustomer, totalPage } =
+      await TransactionService.customerDetail({ query }, payload.id);
 
     res.status(200).json({
       success: true,
       message: 'Transactions retrieved successfully',
       data: findTransaction,
       customer: findCustomer,
+      meta: totalPage,
     });
   }
 }

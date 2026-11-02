@@ -5,10 +5,6 @@ const emptyToUndefined = (v: unknown) =>
 
 export const pointStep = 10000;
 
-const customerId = z.uuid('Customer ID is not valid');
-
-const eventId = z.uuid('Event ID is not valid');
-
 const ticketTypeId = z.uuid('Ticket type ID is not valid');
 
 const quantity = z.coerce
@@ -16,24 +12,6 @@ const quantity = z.coerce
   .int('Quantity must be a whole number')
   .min(1, 'Minimum quantity is 1 ticket per order')
   .max(4, 'Maximum quantity is 4 tickets per order');
-
-const unitPrice = z.preprocess(
-  emptyToUndefined,
-  z.coerce
-    .number('Unit price input must be a number')
-    .int('Unit price must be a whole number')
-    .min(0, 'Unit price is required')
-    .max(2000000000, 'Unit price is too large'),
-);
-
-const subtotal = z.preprocess(
-  emptyToUndefined,
-  z.coerce
-    .number('Subtotal input must be a number')
-    .int('Subtotal must be a whole number')
-    .min(0, 'Subtotal is required')
-    .max(2000000000, 'Subtotal is too large'),
-);
 
 const voucherCode = z.preprocess(
   emptyToUndefined,
@@ -67,36 +45,6 @@ const pointsUsed = z.preprocess(
       `Points can only be used in multiple of ${pointStep}`,
     )
     .default(0),
-);
-
-const totalPrice = z.preprocess(
-  emptyToUndefined,
-  z.coerce
-    .number('Total price input must be a number')
-    .int('Total price must be a whole number')
-    .min(0, 'Total price is required')
-    .max(2000000000, 'Total price is too large'),
-);
-
-const status = z.enum(
-  [
-    'WAITING_PAYMENT',
-    'WAITING_CONFIRMATION',
-    'DONE',
-    'REJECTED',
-    'EXPIRED',
-    'CANCELED',
-  ],
-  'Status must be WAITING_PAYMENT, WAITING_CONFIRMATION, DONE, REJECTED, EXPIRED, CANCELED',
-);
-
-const paymentProofUrl = z.preprocess(
-  emptyToUndefined,
-  z
-    .string()
-    .min(1, 'Payment proof URL is required')
-    .max(500, 'Maximum input is 500 characters')
-    .optional(),
 );
 
 export const createTransactionSchema = z.object({
@@ -135,9 +83,17 @@ export const paymentSchema = z.object({
   ),
 });
 
+export const transpaginationSchema = z.object({
+  query: z.object({
+    page: z.coerce.number('input must be a number').optional().default(1),
+    limit: z.coerce.number('input must be a number').optional().default(10),
+  }),
+});
+
 export type CreateTransactionInput = z.input<typeof createTransactionSchema>;
 export type CreateTransactionOutput = z.output<typeof createTransactionSchema>;
 export type GetDetailTrasanctionOutput = z.output<
   typeof getDetailTrasanctionSchema
 >;
 export type PaymentOutput = z.output<typeof paymentSchema>;
+export type TransPaginationRequest = z.infer<typeof transpaginationSchema>;
