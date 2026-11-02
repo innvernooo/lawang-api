@@ -20,6 +20,7 @@ eventRouter.get('/weekly', EventController.weeklyEvent);
 eventRouter.get('/music', EventController.musicEvent);
 eventRouter.get('/science', EventController.scienceEvent);
 eventRouter.get('/eventDetail/:slug', EventController.getEventDetail);
+//Ini route untuk event organizer
 eventRouter.get(
   '/organizerEvents',
   authenticate,
