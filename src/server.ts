@@ -14,6 +14,7 @@ import { transactionRouter } from './features/transaction/transaction.route';
 import { confirmationRouter } from './features/confirmation/confirm.route';
 import { voucherRouter } from './features/voucher/voucher.router';
 import { readingRouter } from './features/reading/reading.route';
+import { reviewRouter } from './features/review/review.route';
 
 const PORT: number = parseInt(process.env.PORT!);
 const API_PREFIX: string = process.env.API_PREFIX!;
@@ -32,6 +33,7 @@ app.use(`${API_PREFIX}/transactions`, transactionRouter);
 app.use(`${API_PREFIX}/confirmations`, confirmationRouter);
 app.use(`${API_PREFIX}/vouchers`, voucherRouter);
 app.use(`${API_PREFIX}/readings`, readingRouter);
+app.use(`${API_PREFIX}/reviews`, reviewRouter);
 
 app.use(errorMiddleware);
 

@@ -23,7 +23,7 @@ export class AuthController {
     });
   }
 
-  static async me(req: Request, res: Response) {
+  static async me(_: Request, res: Response) {
     const { payload } = res.locals;
 
     const user = await AuthService.me(payload?.id, payload?.role);
@@ -32,6 +32,20 @@ export class AuthController {
       success: true,
       message: 'User data retrieved successfully',
       data: user,
+    });
+  }
+
+  static async out(req: Request, res: Response) {
+    res.clearCookie('token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'PRODUCTION',
+      sameSite: 'strict',
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'User logged out successfully',
+      data: {},
     });
   }
 }

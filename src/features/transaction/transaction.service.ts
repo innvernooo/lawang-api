@@ -312,4 +312,34 @@ export class TransactionService {
       return result;
     });
   }
+
+  static async customerDetail(customerId: string) {
+    const findTransaction = await prisma.transaction.findMany({
+      where: {
+        customerId,
+      },
+      include: {
+        event: {
+          select: {
+            name: true,
+            category: true,
+            pricingType: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+    });
+
+    const findCustomer = await prisma.customer.findUnique({
+      where: {
+        id: customerId,
+      },
+    });
+
+    if (!findTransaction) throw new AppError(404, 'Customer ID does not match');
+
+    return { findTransaction, findCustomer };
+  }
 }

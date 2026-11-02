@@ -8,12 +8,13 @@ import { TicketService } from './ticket.service';
 
 export class TicketController {
   static async addTicket(req: Request, res: Response) {
+    const { payload } = res.locals;
     const { body, params } = validate(addTicketTypeSchema, {
       body: req.body,
       params: req.params,
     });
 
-    const ticket = await TicketService.addTicket({ body, params });
+    const ticket = await TicketService.addTicket({ body, params }, payload.id);
 
     res.status(201).json({
       success: true,
@@ -31,6 +32,18 @@ export class TicketController {
       success: true,
       message: 'Ticket type retrieved successfully',
       data: ticket,
+    });
+  }
+
+  static async getOrganizerEventForTicket(req: Request, res: Response) {
+    const { payload } = res.locals;
+
+    const event = await TicketService.getOrganizerEventForTicket(payload.id);
+
+    res.status(200).json({
+      success: true,
+      message: 'Events retrieved successfully',
+      data: event,
     });
   }
 }

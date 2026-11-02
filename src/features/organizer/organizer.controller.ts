@@ -20,4 +20,16 @@ export class OrganizerController {
       data: organizer,
     });
   }
+
+  static async profile(req: Request, res: Response) {
+    const { payload } = res.locals;
+
+    const organizer = await OrganizerService.profile(payload.id);
+
+    res.status(200).json({
+      success: true,
+      message: 'Organizer data retrieved successfully',
+      data: organizer,
+    });
+  }
 }
