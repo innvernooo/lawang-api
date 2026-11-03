@@ -23,4 +23,11 @@ export const createReviewSchema = z.object({
   }),
 });
 
+export const getReviewByEventSchema = z.object({
+  params: z.object({
+    eventId: z.uuid('Event ID is not valid'),
+  }),
+});
+
 export type CreateReviewRequest = z.infer<typeof createReviewSchema>;
+export type GetReviewByEventRequest = z.infer<typeof getReviewByEventSchema>;

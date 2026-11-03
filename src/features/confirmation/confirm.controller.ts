@@ -57,10 +57,10 @@ export class ConfirmationController {
 
   static async getTransaction(req: Request, res: Response) {
     const { payload } = res.locals;
-    const { params } = validate(getTransantionShema, { params: req.params });
+    const { params, query } = validate(getTransantionShema, { params: req.params, query: req.query });
 
     const confirmation = await ConfirmationService.getTransaction(
-      { params },
+      { params, query },
       payload.id,
     );
 

@@ -313,7 +313,7 @@ export class TransactionService {
 
         return result;
       },
-      { timeout: 10000 },
+      { timeout: 15000 },
     );
   }
 

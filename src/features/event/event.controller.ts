@@ -8,6 +8,7 @@ import {
   getUpcomingEventsSchema,
 } from '../../validators/event.validator';
 import { EventService } from './event.service';
+import { paginationSchema } from '../../validators/pagination.validator';
 
 export class EventController {
   static async create(req: Request, res: Response) {
@@ -96,15 +97,20 @@ export class EventController {
     });
   }
 
-  static async getOrganizerEvent(_: Request, res: Response) {
+  static async getOrganizerEvent(req: Request, res: Response) {
     const { payload } = res.locals;
+    const { query } = validate(paginationSchema, { query: req.query });
 
-    const event = await EventService.getOrganizerEvent(payload.id);
+    const { organizerEvent, totalPage } = await EventService.getOrganizerEvent(
+      { query },
+      payload.id,
+    );
 
     res.status(200).json({
       success: true,
       message: 'Events retrieved successfully',
-      data: event,
+      data: organizerEvent,
+      totalPage,
     });
   }
 

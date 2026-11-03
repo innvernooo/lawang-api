@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { validate } from '../../validators/validate';
 import {
   createReviewSchema,
+  getReviewByEventSchema,
 } from '../../validators/review.validator';
 import { ReviewService } from './review.service';
 
@@ -34,6 +35,32 @@ export class ReviewController {
       message: 'Events retireved successfully',
       data: getEvent,
       customer: getCustomer,
+    });
+  }
+
+  static async getEventByOrganizer(_: Request, res: Response) {
+    const { payload } = res.locals;
+
+    const review = await ReviewService.getEventByOrganizer(payload.id);
+
+    res.status(201).json({
+      success: true,
+      message: 'Organizer events retrieved successfully',
+      data: review,
+    });
+  }
+
+  static async getReviewByEvent(req: Request, res: Response) {
+    const { payload } = res.locals;
+
+    const { params } = validate(getReviewByEventSchema, { params: req.params });
+
+    const review = await ReviewService.getReviewByEvent({ params }, payload.id);
+
+    res.status(201).json({
+      success: true,
+      message: 'Reviews retrieved successfully',
+      data: review,
     });
   }
 }
