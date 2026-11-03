@@ -1,5 +1,6 @@
 import { prisma } from '../../configs/prisma-client.config';
 import { AppError } from '../../errors/app.error';
+import { PaginationRequest } from '../../validators/pagination.validator';
 import {
   GetTicketTypeRequest,
   TicketTypeOutput,
@@ -50,8 +51,13 @@ export class TicketService {
     });
   }
 
-  static async getOrganizerEventForTicket(organizerId: string) {
-    return await prisma.event.findMany({
+  static async getOrganizerEventForTicket(
+    { query }: PaginationRequest,
+    organizerId: string,
+  ) {
+    const offset = (query.page - 1) * query.limit;
+
+    const organizerEvent = await prisma.event.findMany({
       where: {
         organizerId,
         startDate: { gt: new Date() },
@@ -59,8 +65,28 @@ export class TicketService {
       },
       include: {
         ticketTypes: true,
-        vouchers: true
+        vouchers: true,
+      },
+      orderBy: {
+        startDate: 'asc',
+      },
+      take: query.limit,
+      skip: offset,
+    });
+
+    const totalData = await prisma.event.count({
+      where: {
+        organizerId,
+        startDate: { gt: new Date() },
+        pricingType: 'PAID',
       },
     });
+
+    const totalPage = Math.ceil(totalData / query.limit);
+
+    return {
+      organizerEvent,
+      totalPage,
+    };
   }
 }

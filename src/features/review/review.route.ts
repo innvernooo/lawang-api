@@ -17,3 +17,17 @@ reviewRouter.get(
   authorize(['CUSTOMER']),
   ReviewController.getEventByCustomer,
 );
+
+reviewRouter.get(
+  '/organizer-event/me',
+  authenticate,
+  authorize(['ORGANIZER']),
+  ReviewController.getEventByOrganizer,
+);
+
+reviewRouter.get(
+  '/:eventId',
+  authenticate,
+  authorize(['ORGANIZER']),
+  ReviewController.getReviewByEvent,
+);

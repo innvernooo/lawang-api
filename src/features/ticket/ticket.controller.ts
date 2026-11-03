@@ -5,6 +5,7 @@ import {
   getTicketTypeSchema,
 } from '../../validators/ticket.validator';
 import { TicketService } from './ticket.service';
+import { paginationSchema } from '../../validators/pagination.validator';
 
 export class TicketController {
   static async addTicket(req: Request, res: Response) {
@@ -37,13 +38,16 @@ export class TicketController {
 
   static async getOrganizerEventForTicket(req: Request, res: Response) {
     const { payload } = res.locals;
+    const { query } = validate(paginationSchema, { query: req.query });
 
-    const event = await TicketService.getOrganizerEventForTicket(payload.id);
+    const { organizerEvent, totalPage } =
+      await TicketService.getOrganizerEventForTicket({ query }, payload.id);
 
     res.status(200).json({
       success: true,
       message: 'Events retrieved successfully',
-      data: event,
+      data: organizerEvent,
+      totalPage,
     });
   }
 }

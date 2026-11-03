@@ -128,9 +128,10 @@ export class ConfirmationService {
   }
 
   static async getTransaction(
-    { params }: GetTransactionOutput,
+    { params, query }: GetTransactionOutput,
     organizerId: string,
   ) {
+
     const checkEventId = await prisma.event.findUnique({
       where: {
         id: params.eventId,

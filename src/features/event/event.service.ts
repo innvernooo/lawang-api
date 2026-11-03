@@ -10,6 +10,7 @@ import {
 } from '../../validators/event.validator';
 import { AppError } from '../../errors/app.error';
 import { Prisma } from '../../generated/prisma/client';
+import { PaginationRequest } from '../../validators/pagination.validator';
 
 export class EventService {
   static async create(
@@ -184,7 +185,7 @@ export class EventService {
 
     return findEvent;
   }
-//ini service untuk event organizer
+  //ini service untuk event organizer
   static async getOrganizerEventDetail(
     { params }: GetOrganizerEventDetailRequest,
     organizerId: string,
@@ -201,15 +202,42 @@ export class EventService {
     return findEvent;
   }
 
-  static async getOrganizerEvent(organizerId: string) {
+  static async getOrganizerEvent(
+    { query }: PaginationRequest,
+    organizerId: string,
+  ) {
     const now = new Date();
+    const offset = (query.page - 1) * query.limit;
 
-    return await prisma.event.findMany({
+    const organizerEvent = await prisma.event.findMany({
+      where: {
+        organizerId,
+        endDate: { gte: now },
+      },
+      include: {
+        transactions: {
+          where: {
+            status: 'WAITING_CONFIRMATION',
+          },
+        },
+      },
+      orderBy: {
+        startDate: 'asc',
+      },
+      take: query.limit,
+      skip: offset,
+    });
+
+    const totalData = await prisma.event.count({
       where: {
         organizerId,
         endDate: { gte: now },
       },
     });
+
+    const totalPage = Math.ceil(totalData / query.limit);
+
+    return { organizerEvent, totalPage };
   }
 
   static async getEventCategories({ query }: GetEventCategoriesRequest) {

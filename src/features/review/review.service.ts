@@ -1,6 +1,9 @@
 import { prisma } from '../../configs/prisma-client.config';
 import { AppError } from '../../errors/app.error';
-import { CreateReviewRequest } from '../../validators/review.validator';
+import {
+  CreateReviewRequest,
+  GetReviewByEventRequest,
+} from '../../validators/review.validator';
 
 export class ReviewService {
   static async create(
@@ -89,5 +92,52 @@ export class ReviewService {
     });
 
     return { getCustomer, getEvent };
+  }
+
+  static async getEventByOrganizer(organizerId: string) {
+    return await prisma.event.findMany({
+      where: {
+        organizerId,
+      },
+      include: {
+        reviews: true,
+      },
+      orderBy: {
+        startDate: 'asc',
+      },
+    });
+  }
+
+  static async getReviewByEvent(
+    { params }: GetReviewByEventRequest,
+    organizerId: string,
+  ) {
+    const checkEvent = await prisma.event.findUnique({
+      where: {
+        id: params.eventId,
+      },
+    });
+
+    if (!checkEvent) throw new AppError(404, 'Event not found');
+    if (checkEvent.organizerId !== organizerId)
+      throw new AppError(409, 'This event does not belong to you');
+
+    return await prisma.review.findMany({
+      where: {
+        eventId: params.eventId,
+      },
+      include: {
+        customer: {
+          select: {
+            name: true,
+          },
+        },
+        event: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    });
   }
 }
