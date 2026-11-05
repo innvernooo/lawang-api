@@ -20,7 +20,7 @@ export class AuthService {
 
     const user = customer ?? (await prisma.organizer.findFirst({ where }));
 
-    if (!user) throw new AppError(401, 'Invalid email/username or password');
+    if (!user) throw new AppError(401, 'Email/nama pengguna atau kata sandi salah');
 
     const comparredPassword = await Bcrypt.comparredPassword(
       body?.password,
@@ -28,7 +28,7 @@ export class AuthService {
     );
 
     if (!comparredPassword)
-      throw new AppError(401, 'Invalid email/username or password');
+      throw new AppError(401, 'Email/nama pengguna atau kata sandi salah');
 
     const name = 'organizerName' in user ? user.organizerName : user.name;
 

@@ -5,51 +5,42 @@ const emptyToUndefined = (v: unknown) =>
 
 export const pointStep = 10000;
 
-const ticketTypeId = z.uuid('Ticket type ID is not valid');
+const ticketTypeId = z.uuid('Pilih jenis tiket terlebih dahulu');
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 const quantity = z.coerce
-  .number('Quantity input must be a number')
-  .int('Quantity must be a whole number')
-  .min(1, 'Minimum quantity is 1 ticket per order')
-  .max(4, 'Maximum quantity is 4 tickets per order');
+  .number('Jumlah tiket harus berupa angka')
+  .int('Jumlah tiket harus bilangan bulat')
+  .min(1, 'Minimal 1 tiket per pesanan')
+  .max(4, 'Maksimal 4 tiket per pesanan');
 
 const voucherCode = z.preprocess(
   emptyToUndefined,
-  z
-    .string()
-    .trim()
-    .toUpperCase()
-    .max(30, 'Maximum input is 30 characters')
-    .optional(),
+  z.string().trim().toUpperCase().max(30, 'Maksimal 30 karakter').optional(),
 );
 
 const couponCode = z.preprocess(
   emptyToUndefined,
-  z
-    .string()
-    .trim()
-    .toUpperCase()
-    .max(30, 'Maximum input is 30 characters')
-    .optional(),
+  z.string().trim().toUpperCase().max(30, 'Maksimal 30 karakter').optional(),
 );
 
 const pointsUsed = z.preprocess(
   emptyToUndefined,
   z.coerce
-    .number('Point input must be a number')
-    .int('Point must be a whole number')
-    .min(0, 'Point cannot be negative')
-    .max(50000, 'Maximum point used is 50.000')
+    .number('Poin harus berupa angka')
+    .int('Poin harus bilangan bulat')
+    .min(0, 'Poin tidak boleh negatif')
+    .max(50000, 'Poin yang dipakai maksimal 50.000')
     .multipleOf(
       pointStep,
-      `Points can only be used in multiple of ${pointStep}`,
+      `Poin hanya bisa dipakai dalam kelipatan ${pointStep}`,
     )
     .default(0),
 );
 
 export const createTransactionSchema = z.object({
   params: z.object({
-    eventId: z.uuid('Event ID is not valid'),
+    eventId: z.uuid('ID event tidak valid'),
   }),
 
   body: z.object({
@@ -63,21 +54,24 @@ export const createTransactionSchema = z.object({
 
 export const getDetailTrasanctionSchema = z.object({
   params: z.object({
-    transactionId: z.uuid('Transaction ID is not valid'),
+    transactionId: z.uuid('ID transaksi tidak valid'),
   }),
 });
 
 export const paymentSchema = z.object({
   params: z.object({
-    transactionId: z.uuid('Transaction ID is not valid'),
+    transactionId: z.uuid('ID transaksi tidak valid'),
   }),
   file: z.preprocess(
     emptyToUndefined,
     z
-      .custom<Express.Multer.File>((f) => !!f, 'Payment proof is required')
+      .custom<Express.Multer.File>(
+        (f) => !!f,
+        'Bukti pembayaran wajib diunggah',
+      )
       .refine(
-        (f) => f.mimetype.startsWith('image/'),
-        'Payment proof must be an image',
+        (f) => ALLOWED_TYPES.includes(f.mimetype),
+        'Bukti pembayaran harus berformat JPG, PNG, atau WEBP',
       )
       .optional(),
   ),
@@ -85,8 +79,8 @@ export const paymentSchema = z.object({
 
 export const transpaginationSchema = z.object({
   query: z.object({
-    page: z.coerce.number('input must be a number').optional().default(1),
-    limit: z.coerce.number('input must be a number').optional().default(10),
+    page: z.coerce.number('Input harus berupa angka').optional().default(1),
+    limit: z.coerce.number('Input harus berupa angka').optional().default(10),
   }),
 });
 

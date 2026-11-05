@@ -24,7 +24,7 @@ export class TransactionController {
 
     res.status(201).json({
       success: true,
-      message: 'Transaction created successfully',
+      message: 'Pesanan berhasil dibuat, segera selesaikan pembayaranmu',
       data: transaction,
     });
   }
@@ -35,15 +35,16 @@ export class TransactionController {
     const { params } = validate(getDetailTrasanctionSchema, {
       params: req.params,
     });
-    const transaction = await TransactionService.detail(
+    const { findTransaction, findOrganizer } = await TransactionService.detail(
       { params },
       payload?.id,
     );
 
     res.status(200).json({
       success: true,
-      message: 'Transaction retrieved successfully',
-      data: transaction,
+      message: 'Detail transaksi berhasil dimuat',
+      data: findTransaction,
+      meta: findOrganizer,
     });
   }
 
@@ -62,7 +63,7 @@ export class TransactionController {
 
     res.status(200).json({
       success: true,
-      message: 'Transaction paid successfully',
+      message: 'Bukti pembayaran berhasil dikirim',
       data: transaction,
     });
   }
@@ -76,7 +77,7 @@ export class TransactionController {
 
     res.status(200).json({
       success: true,
-      message: 'Transactions retrieved successfully',
+      message: 'Daftar transaksi berhasil dimuat',
       data: findTransaction,
       customer: findCustomer,
       meta: totalPage,

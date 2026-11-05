@@ -27,7 +27,7 @@ export class TransactionService {
     });
 
     if (!checkEventId)
-      throw new AppError(404, 'Event Id does not exist or end date is over');
+      throw new AppError(404, 'Event tidak ditemukan atau sudah berakhir');
 
     const checkTicketTypeId = await prisma.ticketType.findUnique({
       where: {
@@ -37,12 +37,9 @@ export class TransactionService {
     });
 
     if (!checkTicketTypeId)
-      throw new AppError(
-        404,
-        'Ticket type Id does not match or it does not belong to the event',
-      );
+      throw new AppError(404, 'Jenis tiket tidak tersedia untuk event ini');
     if (checkTicketTypeId.endSale && checkTicketTypeId.endSale < now)
-      throw new AppError(400, 'Ticket sale has ended');
+      throw new AppError(400, 'Penjualan tiket ini sudah berakhir');
 
     const checkCouponCode = body.couponCode
       ? await prisma.coupon.findFirst({
@@ -56,7 +53,7 @@ export class TransactionService {
       : null;
 
     if (body.couponCode && !checkCouponCode)
-      throw new AppError(404, 'Coupon code does not match or it has expired');
+      throw new AppError(404, 'Kode kupon tidak valid atau sudah kedaluwarsa');
 
     const checkVoucherCode = body.voucherCode
       ? await prisma.voucher.findUnique({
@@ -68,16 +65,16 @@ export class TransactionService {
 
     if (body.voucherCode) {
       if (!checkVoucherCode)
-        throw new AppError(404, 'Voucher code does not exist for this event');
+        throw new AppError(404, 'Kode voucher tidak berlaku untuk event ini');
       if (checkVoucherCode.startDate > now)
-        throw new AppError(400, 'Voucher is not active yet');
+        throw new AppError(400, 'Voucher belum bisa dipakai');
       if (checkVoucherCode.endDate <= now)
-        throw new AppError(400, 'Voucher has expired');
+        throw new AppError(400, 'Voucher sudah kedaluwarsa');
       if (
         checkVoucherCode.quota !== null &&
         checkVoucherCode.usedCount >= checkVoucherCode.quota
       )
-        throw new AppError(400, 'Voucher quota is full');
+        throw new AppError(400, 'Kuota voucher sudah habis');
     }
 
     const countSubtotal = checkTicketTypeId.price * body.quantity;
@@ -93,7 +90,7 @@ export class TransactionService {
       );
 
       if (body.pointsUsed > countBeforePoints)
-        throw new AppError(400, 'Point usage is more higher than total price');
+        throw new AppError(400, 'Poin yang dipakai melebihi total harga');
 
       const countTotalPrice = countBeforePoints - body.pointsUsed;
 
@@ -108,7 +105,7 @@ export class TransactionService {
       });
 
       if (stock.count === 0)
-        throw new AppError(400, 'Not enough ticket available');
+        throw new AppError(400, 'Maaf, sisa tiket tidak mencukupi');
 
       if (checkVoucherCode) {
         const updated = await tx.voucher.updateMany({
@@ -124,7 +121,7 @@ export class TransactionService {
         });
 
         if (updated.count === 0)
-          throw new AppError(400, 'Voucher quota is full');
+          throw new AppError(400, 'Kuota voucher sudah habis');
       }
 
       if (checkCouponCode) {
@@ -141,7 +138,7 @@ export class TransactionService {
         });
 
         if (updated.count === 0)
-          throw new AppError(400, 'Coupon cannot be used');
+          throw new AppError(400, 'Kupon tidak bisa dipakai');
       }
 
       const batchesNeeded = body.pointsUsed / pointStep;
@@ -158,7 +155,7 @@ export class TransactionService {
       });
 
       if (freeBatches.length < batchesNeeded)
-        throw new AppError(400, 'Point is not enough');
+        throw new AppError(400, 'Poin kamu tidak cukup');
 
       const transaction = await tx.transaction.create({
         data: {
@@ -223,14 +220,25 @@ export class TransactionService {
         event: {
           select: {
             pricingType: true,
+            organizerId: true,
           },
         },
       },
     });
+    const findOrganizer = await prisma.organizer.findFirst({
+      where: {
+        id: findTransaction?.event.organizerId,
+      },
+      select: {
+        bankName: true,
+        bankAccountNumber: true,
+        bankAccountHolder: true,
+      },
+    });
 
-    if (!findTransaction) throw new AppError(404, 'Transaction not found');
+    if (!findTransaction) throw new AppError(404, 'Transaksi tidak ditemukan');
 
-    return findTransaction;
+    return { findTransaction, findOrganizer };
   }
 
   static async payment({ params, file }: PaymentOutput, customerId: string) {
@@ -243,14 +251,15 @@ export class TransactionService {
       },
     });
 
-    if (!checkTransactionId) throw new AppError(404, 'Transaction not found');
+    if (!checkTransactionId)
+      throw new AppError(404, 'Transaksi tidak ditemukan');
     if (checkTransactionId.status !== 'WAITING_PAYMENT')
-      throw new AppError(409, 'Transaction is not waiting for payment');
+      throw new AppError(409, 'Transaksi ini tidak sedang menunggu pembayaran');
     if (
       checkTransactionId.paymentExpiresAt &&
       checkTransactionId.paymentExpiresAt <= now
     )
-      throw new AppError(400, 'Payment time has expired');
+      throw new AppError(400, 'Batas waktu pembayaran sudah lewat');
     return await prisma.$transaction(
       async (tx) => {
         const cloudinaryUploadUrl = file
@@ -275,7 +284,7 @@ export class TransactionService {
         });
 
         if (updated.count === 0)
-          throw new AppError(409, 'Transaction can no longer be paid');
+          throw new AppError(409, 'Transaksi ini sudah tidak bisa dibayar');
 
         const result = await tx.transaction.findUnique({
           where: {
@@ -294,7 +303,7 @@ export class TransactionService {
         );
         const templateHTMLCompiled = Handlebars.compile(templateHTML);
         const html = templateHTMLCompiled({
-          customerName: result?.customer?.name ?? 'Pelanggan',
+          customerName: result?.customer?.name ?? 'Customer',
           transactionId: result?.id ?? '',
           eventName: result?.event?.name,
           paymentDate: now.toLocaleDateString('id-ID'),
@@ -307,7 +316,7 @@ export class TransactionService {
 
         const mailer = await transporter.sendMail({
           to: result?.customer?.email,
-          subject: 'Selamat payment berhasil',
+          subject: 'Pembayaran Berhasil! Terima kasih sudah memesan di Lawang',
           html: html,
         });
 
@@ -356,7 +365,7 @@ export class TransactionService {
       },
     });
 
-    if (!findTransaction) throw new AppError(404, 'Customer ID does not match');
+    if (!findTransaction) throw new AppError(404, 'Transaksi tidak ditemukan');
 
     return { findTransaction, findCustomer, totalPage };
   }

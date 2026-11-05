@@ -26,7 +26,22 @@ export class EventService {
       slugify(body.name, { lower: true, strict: true }).slice(0, 190) ||
       'event';
     let slug = base;
+    let counter = 1;
 
+    while (
+      await prisma.event.findUnique({
+        where: {
+          slug,
+        },
+        select: {
+          id: true,
+        },
+      })
+    ) {
+      counter++;
+      slug = `${base}-${counter}`;
+    }
+    
     return await prisma.$transaction(async (tx) => {
       const createEvent = await tx.event.create({
         data: {
@@ -181,7 +196,7 @@ export class EventService {
     });
 
     if (!findEvent)
-      throw new AppError(404, `Event ${params.slug} does not exist`);
+      throw new AppError(404, `Event ${params.slug} tidak ditemukan`);
 
     return findEvent;
   }
@@ -197,7 +212,7 @@ export class EventService {
       },
     });
 
-    if (!findEvent) throw new AppError(404, 'Event not found');
+    if (!findEvent) throw new AppError(404, 'Event tidak ditemukan');
 
     return findEvent;
   }

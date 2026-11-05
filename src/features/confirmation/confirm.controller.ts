@@ -18,7 +18,7 @@ export class ConfirmationController {
 
     res.status(200).json({
       success: true,
-      message: 'Transaction accepted successfully',
+      message: 'Transaksi berhasil diterima',
       data: confirmation,
     });
   }
@@ -34,7 +34,7 @@ export class ConfirmationController {
 
     res.status(200).json({
       success: true,
-      message: 'Transaction rejected successfully',
+      message: 'Transaksi berhasil ditolak',
       data: confirmation,
     });
   }
@@ -50,7 +50,7 @@ export class ConfirmationController {
 
     res.status(200).json({
       success: true,
-      message: 'Transaction canceled successfully',
+      message: 'Transaksi berhasil dibatalkan',
       data: confirmation,
     });
   }
@@ -66,7 +66,7 @@ export class ConfirmationController {
 
     res.status(200).json({
       success: true,
-      message: 'Transactions retrieved successfully',
+      message: 'Daftar transaksi berhasil dimuat',
       data: confirmation,
     });
   }

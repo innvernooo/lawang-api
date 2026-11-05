@@ -18,7 +18,7 @@ export class AuthController {
 
     res.status(200).json({
       success: true,
-      message: 'User logged in successfully',
+      message: 'Berhasil masuk, selamat datang kembali!',
       data: safeUser,
     });
   }
@@ -30,7 +30,7 @@ export class AuthController {
 
     res.status(200).json({
       success: true,
-      message: 'User data retrieved successfully',
+      message: 'Data pengguna berhasil dimuat',
       data: user,
     });
   }
@@ -44,7 +44,7 @@ export class AuthController {
 
     res.status(200).json({
       success: true,
-      message: 'User logged out successfully',
+      message: 'Berhasil keluar, sampai jumpa lagi!',
       data: {},
     });
   }

@@ -17,14 +17,14 @@ export class ConfirmationService {
       },
     });
 
-    if (!checkTransactionId) throw new AppError(404, 'Transaction not found');
+    if (!checkTransactionId) throw new AppError(404, 'Transaksi tidak ditemukan');
     if (checkTransactionId.status !== 'WAITING_CONFIRMATION')
-      throw new AppError(409, 'Transaction is not waiting for confirmation');
+      throw new AppError(409, 'Transaksi ini tidak sedang menunggu konfirmasi');
     if (
       checkTransactionId.confirmDeadlineAt &&
       checkTransactionId.confirmDeadlineAt <= now
     )
-      throw new AppError(400, 'Confirmation deadline has passed');
+      throw new AppError(400, 'Batas waktu konfirmasi sudah lewat');
 
     const [accpeted] = await prisma.transaction.updateManyAndReturn({
       where: {
@@ -40,7 +40,7 @@ export class ConfirmationService {
     });
 
     if (!accpeted)
-      throw new AppError(409, 'Transaction can no longer be confirmed');
+      throw new AppError(409, 'Transaksi ini sudah tidak bisa dikonfirmasi');
 
     return accpeted;
   }
@@ -55,14 +55,14 @@ export class ConfirmationService {
       },
     });
 
-    if (!checkTransactionId) throw new AppError(404, 'Transaction not found');
+    if (!checkTransactionId) throw new AppError(404, 'Transaksi tidak ditemukan');
     if (checkTransactionId.status !== 'WAITING_CONFIRMATION')
-      throw new AppError(409, 'Transaction is not waiting for confirmation');
+      throw new AppError(409, 'Transaksi ini tidak sedang menunggu konfirmasi');
     if (
       checkTransactionId.confirmDeadlineAt &&
       checkTransactionId.confirmDeadlineAt <= now
     )
-      throw new AppError(400, 'Confirmation deadline has passed');
+      throw new AppError(400, 'Batas waktu konfirmasi sudah lewat');
 
     return prisma.$transaction(async (tx) => {
       const [rejected] = await tx.transaction.updateManyAndReturn({
@@ -78,7 +78,7 @@ export class ConfirmationService {
       });
 
       if (!rejected)
-        throw new AppError(409, 'Transaction can no longer be rejected');
+        throw new AppError(409, 'Transaksi ini sudah tidak bisa ditolak');
 
       await restoreResources(tx, rejected, now);
 
@@ -96,14 +96,14 @@ export class ConfirmationService {
       },
     });
 
-    if (!checkTransactionId) throw new AppError(404, 'Transaction not found');
+    if (!checkTransactionId) throw new AppError(404, 'Transaksi tidak ditemukan');
     if (checkTransactionId.status !== 'WAITING_PAYMENT')
-      throw new AppError(409, 'Transaction is not waiting for payment');
+      throw new AppError(409, 'Transaksi ini tidak sedang menunggu pembayaran');
     if (
       checkTransactionId.paymentExpiresAt &&
       checkTransactionId.paymentExpiresAt <= now
     )
-      throw new AppError(400, 'Transaction has expired');
+      throw new AppError(400, 'Transaksi sudah kedaluwarsa');
 
     return await prisma.$transaction(async (tx) => {
       const [canceled] = await tx.transaction.updateManyAndReturn({
@@ -119,7 +119,7 @@ export class ConfirmationService {
       });
 
       if (!canceled)
-        throw new AppError(409, 'Transaction can no longer be canceled');
+        throw new AppError(409, 'Transaksi ini sudah tidak bisa dibatalkan');
 
       await restoreResources(tx, canceled, now);
 
@@ -140,7 +140,7 @@ export class ConfirmationService {
     });
 
     if (!checkEventId)
-      throw new AppError(404, 'Event ID or Organizer ID does not match');
+      throw new AppError(404, 'Event tidak ditemukan atau bukan milikmu');
 
     return await prisma.transaction.findMany({
       where: {

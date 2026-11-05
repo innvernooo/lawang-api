@@ -17,11 +17,11 @@ export class TicketService {
       },
     });
 
-    if (!findEventId) throw new AppError(404, 'Event ID does not match');
+    if (!findEventId) throw new AppError(404, 'Event tidak ditemukan');
     if (findEventId.pricingType !== 'PAID')
-      throw new AppError(409, 'Free events cannot have ticket');
+      throw new AppError(409, 'Event gratis tidak bisa ditambah tiket');
     if (findEventId.organizerId !== organizerId)
-      throw new AppError(409, 'This event does not belong to you');
+      throw new AppError(409, 'Event ini bukan milikmu');
 
     return await prisma.ticketType.create({
       data: {
@@ -39,7 +39,7 @@ export class TicketService {
       },
     });
 
-    if (!findEventId) throw new AppError(404, 'Event not found');
+    if (!findEventId) throw new AppError(404, 'Event tidak ditemukan');
 
     return await prisma.ticketType.findMany({
       where: {

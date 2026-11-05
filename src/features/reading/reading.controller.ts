@@ -18,7 +18,7 @@ export class ReadingController {
 
     res.status(201).json({
       success: true,
-      message: 'Reading created successfully',
+      message: 'Artikel berhasil dibuat',
       data: reading,
     });
   }
@@ -28,7 +28,7 @@ export class ReadingController {
 
     res.status(200).json({
       success: true,
-      message: 'Readings retrieved successfully',
+      message: 'Daftar artikel berhasil dimuat',
       data: reading,
     });
   }
@@ -42,7 +42,7 @@ export class ReadingController {
 
     res.status(200).json({
       success: true,
-      message: 'Reading retrieved successfully',
+      message: 'Artikel berhasil dimuat',
       data: reading,
     });
   }

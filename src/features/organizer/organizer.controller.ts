@@ -16,7 +16,7 @@ export class OrganizerController {
 
     res.status(201).json({
       success: true,
-      message: 'Event Organizer registered successfully',
+      message: 'Pendaftaran Event Organizer berhasil, selamat datang di Lawang!',
       data: organizer,
     });
   }
@@ -28,7 +28,7 @@ export class OrganizerController {
 
     res.status(200).json({
       success: true,
-      message: 'Organizer data retrieved successfully',
+      message: 'Data Event Organizer berhasil dimuat',
       data: organizer,
     });
   }

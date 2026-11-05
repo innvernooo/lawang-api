@@ -18,9 +18,9 @@ export class ReviewService {
       },
     });
 
-    if (!checkSlug) throw new AppError(404, 'Event slug not found');
+    if (!checkSlug) throw new AppError(404, 'Event tidak ditemukan');
     if (checkSlug.endDate && checkSlug.endDate >= now)
-      throw new AppError(409, 'Event is not finished yet');
+      throw new AppError(409, 'Event ini belum selesai, ulasan bisa diberikan setelah event berakhir');
 
     const checkTransaction = await prisma.transaction.findFirst({
       where: {
@@ -31,7 +31,7 @@ export class ReviewService {
     });
 
     if (!checkTransaction)
-      throw new AppError(409, 'You were not attending this event');
+      throw new AppError(409, 'Kamu tidak tercatat sebagai peserta event ini');
 
     const checkReview = await prisma.review.findFirst({
       where: {
@@ -40,7 +40,7 @@ export class ReviewService {
       },
     });
 
-    if (checkReview) throw new AppError(409, 'You have rated this event');
+    if (checkReview) throw new AppError(409, 'Kamu sudah memberi ulasan untuk event ini');
 
     return await prisma.review.create({
       data: {
@@ -83,7 +83,7 @@ export class ReviewService {
       },
     });
 
-    if (getEvent.length === 0) throw new AppError(404, 'Events not found');
+    if (getEvent.length === 0) throw new AppError(404, 'Event tidak ditemukan');
 
     const getCustomer = await prisma.customer.findUnique({
       where: {
@@ -118,9 +118,9 @@ export class ReviewService {
       },
     });
 
-    if (!checkEvent) throw new AppError(404, 'Event not found');
+    if (!checkEvent) throw new AppError(404, 'Event tidak ditemukan');
     if (checkEvent.organizerId !== organizerId)
-      throw new AppError(409, 'This event does not belong to you');
+      throw new AppError(409, 'Event ini bukan milikmu');
 
     return await prisma.review.findMany({
       where: {
