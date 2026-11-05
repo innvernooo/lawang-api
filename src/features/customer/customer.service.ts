@@ -41,14 +41,14 @@ export class CustomerService {
       select: { id: true },
     });
     if (existing)
-      throw new AppError(409, 'Email or username or NIK already used');
+      throw new AppError(409, 'Email, nama pengguna, atau NIK sudah terdaftar');
 
     const usedByOrganizer = await prisma.organizer.findFirst({
       where: { OR: [{ email: body.email }, { username: body.username }] },
       select: { id: true },
     });
     if (usedByOrganizer)
-      throw new AppError(409, 'Email or username already used');
+      throw new AppError(409, 'Email atau nama pengguna sudah terdaftar');
 
     const hashPassword = Bcrypt.hashPassword(body?.password, 10);
 
@@ -63,7 +63,7 @@ export class CustomerService {
         })
       : null;
     if (body.referralCode && !referrer)
-      throw new AppError(400, 'Referral code not found');
+      throw new AppError(400, 'Kode referral tidak ditemukan');
 
     const cloudinaryUploadUrl = file[0]
       ? ((await cloudionaryUpload(
@@ -117,14 +117,14 @@ export class CustomerService {
       select: { id: true, profilePictureUrl: true },
     });
 
-    if (!user) throw new AppError(404, 'User not found');
+    if (!user) throw new AppError(404, 'Pengguna tidak ditemukan');
 
     if (body.username) {
       const duplicate = await prisma.customer.findFirst({
         where: { username: body.username, id: { not: userId } },
         select: { id: true },
       });
-      if (duplicate) throw new AppError(409, 'Username already used');
+      if (duplicate) throw new AppError(409, 'Nama pengguna sudah dipakai');
     }
 
     const profilePictureUrl = file[0]

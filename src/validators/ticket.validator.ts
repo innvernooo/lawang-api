@@ -7,51 +7,51 @@ const dateTime = (label: string) =>
   z.iso
     .datetime({
       offset: true,
-      message: `${label} must be a valid date-time with timezone, e.g. 2026-07-20T19:00:00+07:00`,
+      message: `${label} harus berupa tanggal dan waktu yang valid, contoh: 2026-07-20T19:00:00+07:00`,
     })
     .pipe(z.coerce.date());
 
 export const addTicketTypeSchema = z.object({
   params: z.object({
     eventId: z
-      .uuid('Event ID is not valid')
-      .min(1, 'Event ID is required')
-      .max(70, 'You have reached maximum charaters input'),
+      .uuid('ID event tidak valid')
+      .min(1, 'ID event wajib diisi')
+      .max(70, 'Input melebihi batas karakter'),
   }),
 
   body: z.object({
     name: z
       .string()
-      .min(1, 'Ticket type is required')
-      .max(100, 'Maximum input is 100 characters'),
+      .min(1, 'Nama tiket wajib diisi')
+      .max(100, 'Maksimal 100 karakter'),
 
     price: z.preprocess(
       emptyToUndefined,
       z.coerce
-        .number('Price must be a number')
-        .int('Price must be a whole number')
-        .min(0, 'Ticket price is required')
-        .max(2000000000, 'Price is too large'),
+        .number('Harga harus berupa angka')
+        .int('Harga harus bilangan bulat')
+        .min(0, 'Harga tiket tidak boleh negatif')
+        .max(2000000000, 'Harga terlalu besar'),
     ),
 
     quota: z.preprocess(
       emptyToUndefined,
       z.coerce
-        .number('Quota must be a number')
-        .int('Quota must be a whole number')
-        .min(1, 'Event price is required')
-        .max(1000, 'Maximum quota is 1000'),
+        .number('Kuota harus berupa angka')
+        .int('Kuota harus bilangan bulat')
+        .min(1, 'Kuota minimal 1')
+        .max(10000, 'Kuota maksimal 10.000'),
     ),
-    endSale: z.preprocess(emptyToUndefined, dateTime('End sale')).optional(),
+    endSale: z.preprocess(emptyToUndefined, dateTime('Batas akhir penjualan')).optional(),
   }),
 });
 
 export const getTicketTypeSchema = z.object({
   params: z.object({
     eventId: z
-      .uuid('Event ID is not valid')
-      .min(1, 'Event ID is required')
-      .max(70, 'You have reached maximum charaters input'),
+      .uuid('ID event tidak valid')
+      .min(1, 'ID event wajib diisi')
+      .max(70, 'Input melebihi batas karakter'),
   }),
 });
 

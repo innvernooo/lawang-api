@@ -18,7 +18,7 @@ export class ReviewController {
 
     res.status(201).json({
       success: true,
-      message: 'Review created successfully',
+      message: 'Ulasan berhasil dikirim, terima kasih!',
       data: review,
     });
   }
@@ -32,7 +32,7 @@ export class ReviewController {
 
     res.status(200).json({
       success: true,
-      message: 'Events retireved successfully',
+      message: 'Daftar event berhasil dimuat',
       data: getEvent,
       customer: getCustomer,
     });
@@ -45,7 +45,7 @@ export class ReviewController {
 
     res.status(201).json({
       success: true,
-      message: 'Organizer events retrieved successfully',
+      message: 'Daftar event milikmu berhasil dimuat',
       data: review,
     });
   }
@@ -59,7 +59,7 @@ export class ReviewController {
 
     res.status(201).json({
       success: true,
-      message: 'Reviews retrieved successfully',
+      message: 'Daftar ulasan berhasil dimuat',
       data: review,
     });
   }

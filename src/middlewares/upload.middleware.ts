@@ -38,7 +38,7 @@ export function uploadMiddleware(
     const fileExtention = file?.originalname?.split('.').pop()?.toLowerCase();
 
     if (!allowedExtention.includes(fileExtention!))
-      return cb(new AppError(415, 'File extension not allowed'));
+      return cb(new AppError(415, 'Format file tidak didukung'));
     cb(null, true);
   }
 

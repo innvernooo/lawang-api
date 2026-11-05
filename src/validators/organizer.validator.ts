@@ -11,107 +11,107 @@ const email = z
   .trim()
   .pipe(
     z
-      .email('Invalid email format')
-      .max(255, 'Email input has maximum 255 characters'),
+      .email('Format email tidak valid')
+      .max(255, 'Email maksimal 255 karakter'),
   );
 
 const username = z
   .string()
   .trim()
-  .min(1, 'Username input is required')
-  .max(50, 'Username input has maximum 50 characters');
+  .min(1, 'Nama pengguna wajib diisi')
+  .max(50, 'Nama pengguna maksimal 50 karakter');
 
 const password = z
   .string()
-  .min(1, 'Password input is required')
-  .max(255, 'Maximum input has maximum 255 characters');
+  .min(1, 'Kata sandi wajib diisi')
+  .max(255, 'Kata sandi maksimal 255 karakter');
 
 const organizerName = z
   .string()
-  .min(1, 'Organizer name input is required')
-  .max(150, 'Maximum input has maximum 150 characters');
+  .min(1, 'Nama Event Organizer wajib diisi')
+  .max(150, 'Maksimal 150 karakter');
 
 const organizerType = z.enum(
   ['INDIVIDUAL', 'COMPANY'],
-  'Oragnaizer type must be choosen',
+  'Pilih jenis Event Organizer',
 );
 
 const legalName = z
   .string()
   .trim()
-  .min(1, 'Legal Name input is required')
-  .max(200, 'Maximum input is 200 characters');
+  .min(1, 'Nama legal wajib diisi')
+  .max(200, 'Maksimal 200 karakter');
 
 const organizerBio = z.preprocess(
   emptyToUndefined,
-  z.string().max(2500, 'Maximum input is 2500 characters').optional(),
+  z.string().max(2500, 'Maksimal 2500 karakter').optional(),
 );
 
 const websiteUrl = z.preprocess(
   emptyToUndefined,
-  z.string().max(255, 'Maximum input is 255 characters').optional(),
+  z.string().max(255, 'Maksimal 255 karakter').optional(),
 );
 
 const instagramUrl = z.preprocess(
   emptyToUndefined,
-  z.string().max(255, 'Maximum input is 255 characters').optional(),
+  z.string().max(255, 'Maksimal 255 karakter').optional(),
 );
 
 const npwp = z
   .string()
   .trim()
-  .regex(/^\+?[0-9]+$/, 'NPWP input must contain digits only')
-  .min(15, 'Minimum length is 15 characters')
-  .max(16, 'Maximum length is 16 characters');
+  .regex(/^\+?[0-9]+$/, 'NPWP hanya boleh berisi angka')
+  .min(15, 'NPWP minimal 15 digit')
+  .max(16, 'NPWP maksimal 16 digit');
 
 const nib = z.preprocess(
   emptyToUndefined,
-  z.string().max(13, 'Maximum input is 13 characters').optional(),
+  z.string().max(13, 'NIB maksimal 13 karakter').optional(),
 );
 
 const picName = z
   .string()
-  .min(1, 'PIC Name input is required')
-  .max(100, 'Maximum input is 100 characters');
+  .min(1, 'Nama penanggung jawab wajib diisi')
+  .max(100, 'Maksimal 100 karakter');
 
 const picNik = z
   .string()
   .trim()
-  .regex(/^[0-9]{16}$/, 'NIK must be 16 digits');
+  .regex(/^[0-9]{16}$/, 'NIK harus 16 digit angka');
 
 const picPhoneNumber = z
   .string()
   .trim()
-  .max(20, 'Phone number input is 20 characters')
-  .regex(/^\+?[0-9]+$/, 'Phone number must contain digits only');
+  .max(20, 'No. ponsel maksimal 20 karakter')
+  .regex(/^\+?[0-9]+$/, 'No. ponsel hanya boleh berisi angka');
 
 const officeAddress = z
   .string()
-  .min(1, 'Office address input is required')
-  .max(500, 'Maximum input is 500 characters');
+  .min(1, 'Alamat kantor wajib diisi')
+  .max(500, 'Maksimal 500 karakter');
 
-const city = z.enum(cities, 'Pick one of the cities');
+const city = z.enum(cities, 'Pilih salah satu kota');
 
-const province = z.enum(provinces, 'Pick one of the provinces');
+const province = z.enum(provinces, 'Pilih salah satu provinsi');
 
 const postalCode = z
   .string()
   .trim()
-  .regex(/^[0-9]{5}$/, 'Postal code must be 5 digits');
+  .regex(/^[0-9]{5}$/, 'Kode pos harus 5 digit angka');
 
-const bankName = z.enum(banks, 'Pick one of the banks');
+const bankName = z.enum(banks, 'Pilih salah satu bank');
 
 const bankAccountNumber = z
   .string()
   .trim()
-  .min(1, 'Bank account number input is required')
-  .max(30, 'Maximum input is 30 characters');
+  .min(1, 'Nomor rekening wajib diisi')
+  .max(30, 'Maksimal 30 karakter');
 
 const bankAccountHolder = z
   .string()
   .trim()
-  .min(1, 'Bank account holder input is required')
-  .max(200, 'Maximum input is 200 characters');
+  .min(1, 'Nama pemilik rekening wajib diisi')
+  .max(200, 'Maksimal 200 karakter');
 
 export const organizerRegisterSchema = z.object({
   body: z.object({

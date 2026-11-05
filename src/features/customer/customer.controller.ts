@@ -19,7 +19,7 @@ export class CustomerController {
 
     res.status(201).json({
       success: true,
-      message: 'User registered successfully',
+      message: 'Pendaftaran berhasil, selamat datang di Lawang!',
       data: user,
     });
   }
@@ -42,7 +42,7 @@ export class CustomerController {
 
     res.status(200).json({
       success: true,
-      message: 'Users data updated successfully',
+      message: 'Profil berhasil diperbarui',
       data: user,
     });
   }
@@ -54,7 +54,7 @@ export class CustomerController {
 
     res.status(200).json({
       success: true,
-      message: 'Customer data retrieved successfully',
+      message: 'Data Customer berhasil dimuat',
       data: user,
     });
   }

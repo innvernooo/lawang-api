@@ -4,7 +4,6 @@ import {
   CreateReadingRequest,
   DetailReadingRequest,
 } from '../../validators/reading.validator';
-import { Multer } from 'multer';
 import { cloudionaryUpload } from '../../lib/cloudinary.lib';
 import { AppError } from '../../errors/app.error';
 
@@ -13,10 +12,25 @@ export class ReadingService {
     { body }: CreateReadingRequest,
     file: Express.Multer.File[],
   ) {
-    const slug = slugify(body.title, { lower: true, strict: true }).slice(
-      0,
-      190,
-    );
+    const base =
+      slugify(body.title, { lower: true, strict: true }).slice(0, 190) ||
+      'Artikel';
+    let slug = base;
+    let counter = 1;
+
+    while (
+      await prisma.reading.findUnique({
+        where: {
+          slug,
+        },
+        select: {
+          id: true,
+        },
+      })
+    ) {
+      counter++;
+      slug = `${base}-${counter}`;
+    }
 
     const cloudinaryUploadUrl = file[0]
       ? ((await cloudionaryUpload(file[0]?.buffer, 'readingPicture')) as string)
@@ -26,7 +40,7 @@ export class ReadingService {
       data: {
         ...body,
         slug,
-        imageUrl: await cloudinaryUploadUrl,
+        imageUrl: cloudinaryUploadUrl,
       },
       omit: {
         description: true,
@@ -49,7 +63,7 @@ export class ReadingService {
       },
     });
 
-    if (!checkSlug) throw new AppError(404, 'Blog slug not found');
+    if (!checkSlug) throw new AppError(404, 'Artikel tidak ditemukan');
 
     return checkSlug;
   }

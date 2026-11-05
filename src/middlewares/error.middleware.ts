@@ -21,7 +21,7 @@ export const errorMiddleware = (
     if (error.code === 'LIMIT_FILE_SIZE') {
       return res.status(413).json({
         success: false,
-        message: `File size exceeds the maximum limit of 5 MB`,
+        message: `Ukuran file maksimal 5 MB`,
         data: {},
       });
     }
@@ -37,21 +37,21 @@ export const errorMiddleware = (
     if (error.code === 'P2002')
       return res.status(409).json({
         success: false,
-        message: 'Data already exists (duplicate unique field)',
+        message: 'Data sudah terdaftar',
         data: {},
       });
 
     if (error.code === 'P2025')
       return res.status(404).json({
         success: false,
-        message: 'Data not found',
+        message: 'Data tidak ditemukan',
         data: {},
       });
   }
 
   return res.status(500).json({
     success: false,
-    message: 'Internal server error',
+    message: 'Terjadi kesalahan di server, silakan coba lagi',
     data: {},
   });
 };

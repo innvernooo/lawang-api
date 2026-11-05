@@ -26,7 +26,7 @@ export class EventController {
 
     res.status(201).json({
       success: true,
-      message: 'Event created successfully',
+      message: 'Event berhasil dibuat',
       data: event,
     });
   }
@@ -38,7 +38,7 @@ export class EventController {
 
     res.status(200).json({
       success: true,
-      message: 'Upcoming events retrieved successfully',
+      message: 'Event mendatang berhasil dimuat',
       data: event,
     });
   }
@@ -50,7 +50,7 @@ export class EventController {
 
     res.status(200).json({
       success: true,
-      message: 'K-pop Events retrieved successfully',
+      message: 'Event K-Pop berhasil dimuat',
       data: event,
     });
   }
@@ -60,7 +60,7 @@ export class EventController {
 
     res.status(200).json({
       success: true,
-      message: 'Weekly Events retrieved successfully',
+      message: 'Event minggu ini berhasil dimuat',
       data: event,
     });
   }
@@ -70,7 +70,7 @@ export class EventController {
 
     res.status(200).json({
       success: true,
-      message: 'Music Events retrieved successfully',
+      message: 'Event musik berhasil dimuat',
       data: event,
     });
   }
@@ -80,7 +80,7 @@ export class EventController {
 
     res.status(200).json({
       success: true,
-      message: 'Science Events retrieved successfully',
+      message: 'Event sains berhasil dimuat',
       data: event,
     });
   }
@@ -92,7 +92,7 @@ export class EventController {
 
     res.status(200).json({
       success: true,
-      message: 'Event detail retrieved successfully',
+      message: 'Detail event berhasil dimuat',
       data: event,
     });
   }
@@ -108,7 +108,7 @@ export class EventController {
 
     res.status(200).json({
       success: true,
-      message: 'Events retrieved successfully',
+      message: 'Daftar event berhasil dimuat',
       data: organizerEvent,
       totalPage,
     });
@@ -128,7 +128,7 @@ export class EventController {
 
     res.status(200).json({
       success: true,
-      message: 'Events retrieved successfully',
+      message: 'Daftar event berhasil dimuat',
       data: event,
     });
   }
@@ -141,7 +141,7 @@ export class EventController {
 
     res.status(200).json({
       success: true,
-      message: 'Events retrieved successfully',
+      message: 'Daftar event berhasil dimuat',
       data: events,
       meta: {
         page,

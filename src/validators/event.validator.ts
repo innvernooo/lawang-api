@@ -8,7 +8,7 @@ const dateTime = (label: string) =>
   z.iso
     .datetime({
       offset: true,
-      message: `${label} must be a valid date-time with timezone, e.g. 2026-07-20T19:00:00+07:00`,
+      message: `${label} harus berupa tanggal dan waktu yang valid, contoh: 2026-07-20T19:00:00+07:00`,
     })
     .pipe(z.coerce.date());
 
@@ -34,47 +34,47 @@ const organizerId = z.preprocess(
   emptyToUndefined,
   z
     .string()
-    .min(1, 'Organizer ID is required')
-    .max(150, 'Maximum input is 150 characters')
+    .min(1, 'ID Event Organizer wajib diisi')
+    .max(150, 'Maksimal 150 karakter')
     .optional(),
 );
 const name = z
   .string()
   .trim()
-  .min(1, 'Event name is required')
-  .max(200, 'Maximum input is 200 characters');
+  .min(1, 'Nama event wajib diisi')
+  .max(200, 'Maksimal 200 karakter');
 
-const description = z.string().trim().min(1, 'Event description is required');
+const description = z.string().trim().min(1, 'Deskripsi event wajib diisi');
 
-const category = z.enum(categories, 'Pick one of the categories');
+const category = z.enum(categories, 'Pilih salah satu kategori');
 
-const city = z.enum(cities, 'Pick one of the cities');
+const city = z.enum(cities, 'Pilih salah satu kota');
 
 const venue = z
   .string()
-  .min(1, 'Event venue is required')
-  .max(200, 'Maximum input is 200 characters');
+  .min(1, 'Lokasi event wajib diisi')
+  .max(200, 'Maksimal 200 karakter');
 
 const pricingType = z.enum(
   ['PAID', 'FREE'],
-  'Pricing type must be PAID or FREE',
+  'Pilih jenis harga: Berbayar atau Gratis',
 );
 
-const startDate = dateTime('Start date').refine(
+const startDate = dateTime('Tanggal mulai').refine(
   (d) => d.getTime() > Date.now(),
-  'Start date must be in the future',
+  'Tanggal mulai harus setelah waktu sekarang',
 );
 
-const endDate = dateTime('End date');
+const endDate = dateTime('Tanggal selesai');
 
 const totalSeats = z.preprocess(
   emptyToUndefined,
   z.coerce
-    .number('Total seats must be a number')
+    .number('Jumlah kursi harus berupa angka')
     .pipe(
       z
-        .int32('Total seats must be a whole number')
-        .min(1, 'Total seats must be at least 1'),
+        .int32('Jumlah kursi harus bilangan bulat')
+        .min(1, 'Jumlah kursi minimal 1'),
     ),
 );
 
@@ -95,8 +95,8 @@ export const createEventSchema = z.object({
 
 export const getUpcomingEventsSchema = z.object({
   query: z.object({
-    page: z.coerce.number('input must be a number').optional().default(1),
-    limit: z.coerce.number('input must be a number').optional().default(12),
+    page: z.coerce.number('Input harus berupa angka').optional().default(1),
+    limit: z.coerce.number('Input harus berupa angka').optional().default(12),
   }),
 });
 
@@ -105,29 +105,29 @@ export const getEventDetailSchema = z.object({
     slug: z
       .string()
       .trim()
-      .min(1, 'Event slug is required')
-      .max(200, 'You have reached maximum charaters input')
-      .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/i, 'Event slug is not valid'),
+      .min(1, 'Slug event wajib diisi')
+      .max(200, 'Input melebihi batas karakter')
+      .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/i, 'Slug event tidak valid'),
   }),
 });
 
 export const getOrganizerEventDetailSchema = z.object({
   params: z.object({
-    eventId: z.uuid('Event ID is not valid'),
+    eventId: z.uuid('ID event tidak valid'),
   }),
 });
 
 export const getEventCategoriesSchema = z.object({
   query: z.object({
     category: z.enum(categories).optional(),
-    city: z.enum(cities, 'Pick one of the cities').optional(),
+    city: z.enum(cities, 'Pilih salah satu kota').optional(),
     search: z
       .string()
       .trim()
-      .max(100, 'Maximum search is 100 characters')
+      .max(100, 'Kata kunci pencarian maksimal 100 karakter')
       .optional(),
-    page: z.coerce.number('input must be a number').optional().default(1),
-    limit: z.coerce.number('input must be a number').optional().default(8),
+    page: z.coerce.number('Input harus berupa angka').optional().default(1),
+    limit: z.coerce.number('Input harus berupa angka').optional().default(8),
   }),
 });
 

@@ -28,14 +28,14 @@ export class OrganizerService {
     });
 
     if (existing)
-      throw new AppError(409, 'Email or username or NPWP already used');
+      throw new AppError(409, 'Email, nama pengguna, atau NPWP sudah terdaftar');
 
     const usedByCustomer = await prisma.customer.findFirst({
       where: { OR: [{ email: body.email }, { username: body.username }] },
       select: { id: true },
     });
     if (usedByCustomer)
-      throw new AppError(409, 'Email or username or NPWP already used');
+      throw new AppError(409, 'Email, nama pengguna, atau NPWP sudah terdaftar');
 
     const hashPassword = Bcrypt.hashPassword(body?.password, 10);
 

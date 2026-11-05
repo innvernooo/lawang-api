@@ -7,42 +7,42 @@ const dateTime = (label: string) =>
   z.iso
     .datetime({
       offset: true,
-      message: `${label} must be a valid date-time with timezone`,
+      message: `${label} harus berupa tanggal dan waktu yang valid`,
     })
     .pipe(z.coerce.date());
 
 const code = z
   .string()
   .toUpperCase()
-  .min(5, 'Minimum input is 5 characters')
-  .max(30, 'Maximum input is 30 characters')
-  .regex(/-/, 'Voucher code must contain "-"');
+  .min(5, 'Kode voucher minimal 5 karakter')
+  .max(30, 'Maksimal 30 karakter')
+  .regex(/-/, 'Kode voucher harus mengandung tanda "-"');
 
 const discountAmount = z.preprocess(
   emptyToUndefined,
   z.coerce
-    .number('Discount amount must be a number')
-    .int('Discount amount must be a whole number')
-    .min(0, 'Discount amount is required')
-    .max(2000000000, 'Discount amount too large'),
+    .number('Nominal diskon harus berupa angka')
+    .int('Nominal diskon harus bilangan bulat')
+    .min(0, 'Nominal diskon tidak boleh negatif')
+    .max(2000000000, 'Nominal diskon terlalu besar'),
 );
 
 const quota = z.preprocess(
   emptyToUndefined,
   z.coerce
-    .number('Quota must be a number')
-    .int('Quota must be a whole number')
-    .min(0, 'Quota is required')
-    .max(1000, 'Quota too large'),
+    .number('Kuota harus berupa angka')
+    .int('Kuota harus bilangan bulat')
+    .min(0, 'Kuota tidak boleh negatif')
+    .max(1000, 'Kuota maksimal 1.000'),
 );
 
-const startDate = dateTime('Start Date');
+const startDate = dateTime('Tanggal mulai');
 
-const endDate = dateTime('End Date');
+const endDate = dateTime('Tanggal selesai');
 
 export const createVoucherSchema = z.object({
   params: z.object({
-    eventId: z.uuid('Event ID is not valid'),
+    eventId: z.uuid('ID event tidak valid'),
   }),
 
   body: z.object({

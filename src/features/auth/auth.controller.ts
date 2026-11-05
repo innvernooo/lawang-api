@@ -8,17 +8,21 @@ export class AuthController {
     const { body } = validate(loginSchema, { body: req.body });
 
     const { token, safeUser } = await AuthService.login({ body });
+    const isProd = process.env.NODE_ENV?.toLowerCase() === 'production';
+    const cookieOptions = {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: 'lax' as const,
+    };
 
     res.cookie('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'PRODUCTION',
-      sameSite: 'strict',
+      ...cookieOptions,
       maxAge: 2 * 60 * 60 * 1000,
     });
 
     res.status(200).json({
       success: true,
-      message: 'User logged in successfully',
+      message: 'Berhasil masuk, selamat datang kembali!',
       data: safeUser,
     });
   }
@@ -30,24 +34,25 @@ export class AuthController {
 
     res.status(200).json({
       success: true,
-      message: 'User data retrieved successfully',
+      message: 'Data pengguna berhasil dimuat',
       data: user,
     });
   }
 
-  static async out(req: Request, res: Response) {
-    res.clearCookie('token', {
+  static async out(_: Request, res: Response) {
+    const isProd = process.env.NODE_ENV?.toLowerCase() === 'production';
+    const cookieOptions = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'PRODUCTION',
-      sameSite: 'strict',
-    });
+      secure: isProd,
+      sameSite: 'lax' as const,
+    };
+
+    res.clearCookie('token', cookieOptions);
 
     res.status(200).json({
       success: true,
-      message: 'User logged out successfully',
+      message: 'Berhasil keluar, sampai jumpa lagi!',
       data: {},
     });
   }
 }
-
-

@@ -16,7 +16,7 @@ export class VoucherController {
 
     res.status(201).json({
       success: true,
-      message: 'Voucher Created successfully',
+      message: 'Voucher berhasil dibuat',
       data: voucher,
     });
   }

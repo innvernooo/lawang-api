@@ -6,24 +6,24 @@ const emptyToUndefined = (v: unknown) =>
 const name = z
   .string()
   .trim()
-  .min(1, 'Fullname input is required')
-  .max(100, 'Fullname input has maximum 100 characters');
+  .min(1, 'Nama lengkap wajib diisi')
+  .max(100, 'Nama lengkap maksimal 100 karakter');
 
 const username = z
   .string()
   .trim()
-  .min(5, 'Username input is required, minimum 5 characters')
-  .max(50, 'Username input has maximum 50 characters');
+  .min(5, 'Nama pengguna wajib diisi, minimal 5 karakter')
+  .max(50, 'Nama pengguna maksimal 50 karakter');
 
 const email = z
-  .email('Invalid email format')
+  .email('Format email tidak valid')
   .trim()
-  .max(255, 'Email input has maximum 255 characters');
+  .max(255, 'Email maksimal 255 karakter');
 
 const password = z
   .string()
-  .min(1, 'Password input is required')
-  .max(255, 'Maximum input has maximum 255 characters');
+  .min(1, 'Kata sandi wajib diisi')
+  .max(255, 'Kata sandi maksimal 255 karakter');
 
 const referralCode = z.preprocess(
   emptyToUndefined,
@@ -31,7 +31,7 @@ const referralCode = z.preprocess(
     .string()
     .trim()
     .toUpperCase()
-    .length(12, 'Referral code must be 12 characters')
+    .length(12, 'Kode referral harus 12 karakter')
     .optional(),
 );
 
@@ -40,8 +40,8 @@ const phoneNumber = z.preprocess(
   z
     .string()
     .trim()
-    .max(20, 'Phone number input has maximum 20 characters')
-    .regex(/^\+?[0-9]+$/, 'Phone number must contain digits only')
+    .max(20, 'No. ponsel maksimal 20 karakter')
+    .regex(/^\+?[0-9]+$/, 'No. ponsel hanya boleh berisi angka')
     .optional(),
 );
 
@@ -50,7 +50,7 @@ const nik = z.preprocess(
   z
     .string()
     .trim()
-    .regex(/^[0-9]{16}$/, 'NIK must be 16 digits')
+    .regex(/^[0-9]{16}$/, 'NIK harus 16 digit angka')
     .optional(),
 );
 

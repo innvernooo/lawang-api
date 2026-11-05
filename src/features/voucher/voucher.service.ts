@@ -15,7 +15,7 @@ export class VoucherService {
     });
 
     if (!checkEventId)
-      throw new AppError(404, 'Event or Organizer ID does not match');
+      throw new AppError(404, 'Event tidak ditemukan atau bukan milikmu');
 
     return await prisma.voucher.create({
       data: {

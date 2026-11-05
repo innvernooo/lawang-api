@@ -2,18 +2,18 @@ import * as z from 'zod';
 
 export const confirmationSchema = z.object({
   params: z.object({
-    transactionId: z.uuid('Transaction ID is not valid'),
+    transactionId: z.uuid('ID transaksi tidak valid'),
   }),
 });
 
 export const getTransantionShema = z.object({
   params: z.object({
-    eventId: z.uuid('Event ID is not valid'),
+    eventId: z.uuid('ID event tidak valid'),
   }),
 
   query: z.object({
-    page: z.coerce.number('input must be a number').optional().default(1),
-    limit: z.coerce.number('input must be a number').optional().default(10),
+    page: z.coerce.number('Input harus berupa angka').optional().default(1),
+    limit: z.coerce.number('Input harus berupa angka').optional().default(10),
   }),
 });
 

@@ -19,7 +19,7 @@ export class TicketController {
 
     res.status(201).json({
       success: true,
-      message: 'Ticket type created successfully',
+      message: 'Tiket berhasil dibuat',
       data: ticket,
     });
   }
@@ -31,7 +31,7 @@ export class TicketController {
 
     res.status(200).json({
       success: true,
-      message: 'Ticket type retrieved successfully',
+      message: 'Daftar tiket berhasil dimuat',
       data: ticket,
     });
   }
@@ -45,7 +45,7 @@ export class TicketController {
 
     res.status(200).json({
       success: true,
-      message: 'Events retrieved successfully',
+      message: 'Daftar event berhasil dimuat',
       data: organizerEvent,
       totalPage,
     });
