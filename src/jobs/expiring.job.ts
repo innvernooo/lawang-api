@@ -40,7 +40,7 @@ export async function PaymentExpiring() {
         await restoreResources(tx, updated, now);
       });
     } catch (error) {
-      console.log(`Expiring gagal memproses transaksi ${t.id}`);
+      console.error(`Expiring gagal memproses transaksi ${t.id}`);
     }
   }
 }

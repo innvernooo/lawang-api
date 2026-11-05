@@ -1,12 +1,9 @@
 import 'dotenv/config';
-import { randomBytes } from 'crypto';
 import { prisma } from '../../configs/prisma-client.config';
 import { AppError } from '../../errors/app.error';
 import { Bcrypt } from '../../lib/bcrypt.lib';
-import { Jwt } from '../../lib/jwt.lib';
 import { OrganizerRegisterOutput } from '../../validators/organizer.validator';
 import { cloudionaryUpload } from '../../lib/cloudinary.lib';
-import { id } from 'zod/locales';
 
 export class OrganizerService {
   static async register(
