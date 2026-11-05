@@ -4,7 +4,6 @@ import { AppError } from '../../errors/app.error';
 import { Bcrypt } from '../../lib/bcrypt.lib';
 import { Jwt } from '../../lib/jwt.lib';
 import { LoginInput } from '../../validators/auth.validator';
-import { tr } from 'zod/locales';
 
 export class AuthService {
   // ===== FUNGSI LOGIN (isi asli rekanmu, tidak diubah) =====
