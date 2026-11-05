@@ -5,6 +5,10 @@ import {
   GetTransactionOutput,
 } from '../../validators/confirm.validator';
 import { restoreResources } from './confirm.helper';
+import transporter from '../../lib/transporter.lib';
+import Handlebars from 'handlebars';
+import { paymentSuccessTemplate } from '../../templates/payment-succesfull';
+import { paymentRejectedTemplate } from '../../templates/payment-rejected';
 
 export class ConfirmationService {
   static async accept({ params }: ConfirmationOutput, organizerId: string) {
@@ -17,7 +21,8 @@ export class ConfirmationService {
       },
     });
 
-    if (!checkTransactionId) throw new AppError(404, 'Transaksi tidak ditemukan');
+    if (!checkTransactionId)
+      throw new AppError(404, 'Transaksi tidak ditemukan');
     if (checkTransactionId.status !== 'WAITING_CONFIRMATION')
       throw new AppError(409, 'Transaksi ini tidak sedang menunggu konfirmasi');
     if (
@@ -26,23 +31,72 @@ export class ConfirmationService {
     )
       throw new AppError(400, 'Batas waktu konfirmasi sudah lewat');
 
-    const [accpeted] = await prisma.transaction.updateManyAndReturn({
-      where: {
-        id: params.transactionId,
-        event: { organizerId },
-        status: 'WAITING_CONFIRMATION',
-        OR: [{ confirmDeadlineAt: null }, { confirmDeadlineAt: { gt: now } }],
-      },
-      data: {
-        status: 'DONE',
-        decidedAt: now,
-      },
-    });
+    return prisma.$transaction(
+      async (tx) => {
+        const [accepted] = await tx.transaction.updateManyAndReturn({
+          where: {
+            id: params.transactionId,
+            event: { organizerId },
+            status: 'WAITING_CONFIRMATION',
+            OR: [
+              { confirmDeadlineAt: null },
+              { confirmDeadlineAt: { gt: now } },
+            ],
+          },
+          data: {
+            status: 'DONE',
+            decidedAt: now,
+          },
+          include: {
+            customer: {
+              select: {
+                email: true,
+                name: true,
+              },
+            },
+            event: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        });
 
-    if (!accpeted)
-      throw new AppError(409, 'Transaksi ini sudah tidak bisa dikonfirmasi');
+        if (!accepted)
+          throw new AppError(
+            409,
+            'Transaksi ini sudah tidak bisa dikonfirmasi',
+          );
 
-    return accpeted;
+        const templateHTMLCompiled = Handlebars.compile(paymentSuccessTemplate);
+
+        const html = templateHTMLCompiled({
+          customerName: accepted?.customer?.name ?? 'Customer',
+          transactionId: accepted?.id ?? '',
+          eventName: accepted?.event?.name,
+          paymentDate: now.toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+            timeZone: 'Asia/Jakarta',
+          }),
+          amount: (accepted?.totalPrice ?? 0).toLocaleString('id-ID', {
+            style: 'currency',
+            currency: 'IDR',
+          }),
+          profileUrl: `${process.env.FRONTEND_URL}/transaction/me`,
+        });
+
+        await transporter.sendMail({
+          to: accepted?.customer?.email,
+          subject: 'Pembayaran Diterima! Terima kasih sudah memesan di Lawang',
+          html: html,
+        });
+
+        return accepted;
+      },
+      { timeout: 15000 },
+    );
   }
 
   static async reject({ params }: ConfirmationOutput, organizerId: string) {
@@ -55,7 +109,8 @@ export class ConfirmationService {
       },
     });
 
-    if (!checkTransactionId) throw new AppError(404, 'Transaksi tidak ditemukan');
+    if (!checkTransactionId)
+      throw new AppError(404, 'Transaksi tidak ditemukan');
     if (checkTransactionId.status !== 'WAITING_CONFIRMATION')
       throw new AppError(409, 'Transaksi ini tidak sedang menunggu konfirmasi');
     if (
@@ -64,26 +119,76 @@ export class ConfirmationService {
     )
       throw new AppError(400, 'Batas waktu konfirmasi sudah lewat');
 
-    return prisma.$transaction(async (tx) => {
-      const [rejected] = await tx.transaction.updateManyAndReturn({
-        where: {
-          id: params.transactionId,
-          status: 'WAITING_CONFIRMATION',
-          event: { organizerId },
-        },
-        data: {
-          status: 'REJECTED',
-          decidedAt: now,
-        },
-      });
+    return prisma.$transaction(
+      async (tx) => {
+        const [rejected] = await tx.transaction.updateManyAndReturn({
+          where: {
+            id: params.transactionId,
+            status: 'WAITING_CONFIRMATION',
+            event: { organizerId },
+          },
+          data: {
+            status: 'REJECTED',
+            decidedAt: now,
+          },
+          include: {
+            customer: {
+              select: {
+                email: true,
+                name: true,
+              },
+            },
+            event: {
+              select: {
+                name: true,
+              },
+            },
+            ticketType: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        });
 
-      if (!rejected)
-        throw new AppError(409, 'Transaksi ini sudah tidak bisa ditolak');
+        if (!rejected)
+          throw new AppError(409, 'Transaksi ini sudah tidak bisa ditolak');
 
-      await restoreResources(tx, rejected, now);
+        await restoreResources(tx, rejected, now);
 
-      return rejected;
-    });
+        const templateHTMLCompiled = Handlebars.compile(
+          paymentRejectedTemplate,
+        );
+
+        const html = templateHTMLCompiled({
+          customerName: rejected?.customer?.name ?? 'Customer',
+          transactionId: rejected?.id ?? '',
+          eventName: rejected?.event?.name,
+          ticketName: rejected?.ticketType?.name,
+          quantity: rejected?.quantity,
+          rejectedDate: now.toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+            timeZone: 'Asia/Jakarta',
+          }),
+          amount: (rejected?.totalPrice ?? 0).toLocaleString('id-ID', {
+            style: 'currency',
+            currency: 'IDR',
+          }),
+          transactionUrl: `${process.env.FRONTEND_URL}/transaction/me`,
+        });
+
+        await transporter.sendMail({
+          to: rejected?.customer?.email,
+          subject: 'Maaf, pembayaranmu ditolak',
+          html: html,
+        });
+
+        return rejected;
+      },
+      { timeout: 15000 },
+    );
   }
 
   static async cancel({ params }: ConfirmationOutput, customerId: string) {
@@ -96,7 +201,8 @@ export class ConfirmationService {
       },
     });
 
-    if (!checkTransactionId) throw new AppError(404, 'Transaksi tidak ditemukan');
+    if (!checkTransactionId)
+      throw new AppError(404, 'Transaksi tidak ditemukan');
     if (checkTransactionId.status !== 'WAITING_PAYMENT')
       throw new AppError(409, 'Transaksi ini tidak sedang menunggu pembayaran');
     if (
@@ -131,7 +237,6 @@ export class ConfirmationService {
     { params, query }: GetTransactionOutput,
     organizerId: string,
   ) {
-
     const checkEventId = await prisma.event.findUnique({
       where: {
         id: params.eventId,

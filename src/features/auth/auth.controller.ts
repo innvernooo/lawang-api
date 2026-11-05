@@ -8,11 +8,15 @@ export class AuthController {
     const { body } = validate(loginSchema, { body: req.body });
 
     const { token, safeUser } = await AuthService.login({ body });
+    const isProd = process.env.NODE_ENV?.toLowerCase() === 'production';
+    const cookieOptions = {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: 'lax' as const,
+    };
 
     res.cookie('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'PRODUCTION',
-      sameSite: 'strict',
+      ...cookieOptions,
       maxAge: 2 * 60 * 60 * 1000,
     });
 
@@ -35,12 +39,15 @@ export class AuthController {
     });
   }
 
-  static async out(req: Request, res: Response) {
-    res.clearCookie('token', {
+  static async out(_: Request, res: Response) {
+    const isProd = process.env.NODE_ENV?.toLowerCase() === 'production';
+    const cookieOptions = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'PRODUCTION',
-      sameSite: 'strict',
-    });
+      secure: isProd,
+      sameSite: 'lax' as const,
+    };
+
+    res.clearCookie('token', cookieOptions);
 
     res.status(200).json({
       success: true,
@@ -49,5 +56,3 @@ export class AuthController {
     });
   }
 }
-
-

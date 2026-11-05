@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+export const paymentSuccessTemplate = `<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -78,4 +78,4 @@
         </tr>
     </table>
 </body>
-</html>
+</html>`;
